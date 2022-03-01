@@ -1,0 +1,585 @@
+---
+title: 'Node JS'
+description: 'Back-end development with node JS'
+date: '21 février 2022'
+author: 'John Lawlet'
+image: '/images/squirrel-illustration-night.jpg'
+---
+
+# NODE JS INTRODUCTION
+
+## Definition:
+
+NODE.JS is a JAVASCRIPT RUNTIME built on google's open-source V8 javascript engine.
+
+- Node is like a container outside of a browser, V8 is used to be run on it.
+- NodeJS advantages: single-threaded, based on event driven, non blocking I/O model, perfect for fast/scalable apps.
+- Usage: API, data streaming, realtime chat, server-side web application.
+
+## Terminal commands
+
+- version of Node JS: "node -v"
+- access to node: "node"
+- open node file: "node filename.js"
+- all commands: "tab" (global variable available)
+- clear terminal: "ctrl + k"
+- previews results: "_" ("3\*8" then "_+6" give the result "3\*8+6")
+
+## NPM and modules
+
+- modules: slugify, nodemon.
+
+- package.json: to install dev dependencies for development : "--save-dev"
+  - "npm init"
+  - "npm install nodemon --save-dev" (auto restarting the server each time there is a change).
+- global installation: (sudo) npm i nodemon --global
+  - start server with nodemon: "nodemon file.js".
+  - To use it easily, use script: scripts: { start: "nodemon file.js" } then 'npm start'.
+- npm version:
+  - "npm outdated" to see current and latest version.
+
+**Example read and write with nodeJS**
+
+```js
+const fs = require('fs');
+const slugify = require('slugify'); // display slug instead of id (better lisibility)
+
+// read from file
+fs.readFileSync(filePath, 'utf-8'); // if not utf-8 indicated, it will send back the buffer.
+
+// write to file
+const textOut = `An example of text to try writing into a file on day ${Date.now()}.`;
+
+fs.writeFileSync(filePath, textOut); // create a file with a new text
+```
+
+## Synchronous Vs Asynchronous (blocking vs non-blocking)
+
+**Synchronous:** examples of readFileSync/writeFileSync (blocking).
+
+- NodeJS is single thread: only one thread for all users. It can create delay for users.
+
+**Asynchronous:** non blocking I/O model
+
+- Callback functions in NodeJS are common (cascade function).
+
+```js
+// asynchronous with callback()
+fs.readFile(filePath, 'utf-8', (err, data) => {
+  if (err) {
+    return throw new Error({ message: 'error occured!', data: error });
+  } else {
+    return { message: 'Reading sucessfull', data: data };
+  }
+});
+
+fs.writeFile(filePath, data, 'utf-8', (err) => {
+  console.log('Your file has been written');
+});
+```
+
+## Create simple web server + routing
+
+```js
+const http = require('http');
+const url = require('url');
+
+const filePath = path.join(process.cwd(), 'data', 'doc.json');
+
+// Code can be put outside the server, it will be called only once and not everytime someone call the api
+// As such it can be synchronous
+const res = fs.readFileSync(filePath, 'utf-8');
+const data = JSON.parse(res);
+
+const server = http.createServer((req, res)) => {
+    const pathName = req.url;
+
+    if (pathName === '/home' || pathName === '/' ) {
+        res.end('This is the home page');
+
+    } else if (pathName === '/api') {
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(data);
+
+    } else {
+        // must be set before the res.end() (final return)
+        res.writeHead(404, {
+            'Content-type': 'text/html'
+            'my-own-header': 'customized meta-data depending on the response'
+        });
+        res.end('<h1>Page not found!</h1>');
+    }
+
+
+    res.end('Hello from the server');
+}
+
+// start listening for incoming request | check on 127.0.0.1:8000
+server.listen(8000, '127.0.0.1', () => {
+    console.log('Listening to request on port 8000');
+})
+```
+
+## Routing
+
+```js
+const url = require('url');
+
+const server = http.createServer((req, res)) => {
+  const { query, pathname } = url.parse(req.url, true)
+}
+```
+
+## export with nodeJS
+
+```js
+modules.exports = () => {
+  //  data to export
+};
+```
+
+# NODE JS EXPLAINED
+
+## What happens when we access a webpage:
+
+- CLIENT <=> HTTP request => send the protocol+IP+Port => TCP/IP connection <=> SERVER
+- HTTP request:
+  - contain get/post request + meta-data (host, agent, language) + body
+- HTTP response:
+  - HTTP version + status code + status message
+  - HTTP response headers
+  - Response body
+
+## static, dynamic and API
+
+- The difference depends on the way that website are built.
+  - Dynamic: build based on dynamic data (Server Side Rendering).
+  - Static: no server (like a blog).
+  - API: only send data to the browser (json format then managed by frameworks).
+- Node: perfect to build API.
+
+# NODE ARCHITECTURE
+
+- Work with V8 and libuv (event loop + thread pool).
+
+## Event loop (IMPORTANT)
+
+The heart of NodeJS is the event loop!
+
+- All the application code that is INSIDE callback functions (all code that is not top level code)
+- Node is build around callback functions
+- Event driven architecture (emit => event loops picks them up => callbacks are called)
+
+Event loop does orchestration:
+4 phases: expired timer callbacks => I/O polling and callback => setImmediate callback => close callbacks
+
+## Don't block the loop !
+
+- DO NOT USE SYNC in functions (fs, crypto, zlib) in your callback functions.
+- Don't perform complex calculation (ex.: loops inside lopps).
+- Be careful with JSON in large objects.
+- Don't use too complex regular expressions.
+
+## Events and Event-Driven architecture
+
+**Event emitter:** => EMITS EVENTS => Event listener => CALLS => Attached callback function
+
+- If we want to use custome event (classes), we have to use EventEmitter.
+- Otherwise: use server which emit automatically and listen for requests.
+
+```js
+const EventEmitter = require('events');
+
+class Sales extends EventEmitter {
+  constructor();
+  super();
+}
+
+const myEmitter = new Sales();
+
+myEmitter.on('newSale', () => {
+  console.log('There was a new sale!');
+});
+
+myEmitter.on('newSale', stock => {
+  console.log(`There are now ${stock} items in stock`); // argument stock sent back is 9
+});
+
+myEmitter.emit('newSale', 9);
+
+// other way to do it
+
+const server = http.createServer();
+
+server.on('request', (req, res) => {
+  console.log("Request received!")
+  res.end("Request received!")
+})
+
+server.listen(8000, '127.0.0.1' () => {
+  console.log("Waiting for requests")
+})
+```
+
+## Streams
+
+- Used to process (read and write data piece by piece (chuncks), without completing the whole read or write operation.
+- No need to keep all data in memory (perfect for handling large volumes of data).
+- More efficient data processing in terms of memory and time (don't have to wait for the data to dl).
+
+**Types:** => Streams are instances of EventEmitter
+
+- readable: http requests/fs read ; data/end ; pipe()/read()
+- writable: http responses/fs write ; drain/finish ; write()/end()
+- duplex (both r/w): net web socket
+- transform : transform data as it is written or read (zlib Gzip creation)
+
+```js
+// STREAM SOLUTIONS
+const fs = require('fs');
+const server = require('http').createServer();
+
+server.on('request', (req, res) => {
+  // solution 1 (not the best if big file)
+  fs.readFile(filePath, (err, data) => {
+    if ('err') console.log(err);
+    res.end(data); // need to read everything before sending it
+  });
+
+  // solution 2: streams
+  const readable = fs.createReadSteam(filePath);
+  readable.on('data', (chunk) => {
+    res.write(chunk);
+  });
+  readable.on('end', () => {
+    res.end(); // no need to send data because it is read JIT
+  });
+  readable.on('error', (err) => {
+    console.log(err);
+    res.statusCode = 500;
+    res.end('File not found!');
+  });
+
+  // solution 3 to avoid back pressure (increase receiving/sending speed)
+  const readable = fs.createReadSteam(filePath);
+  readable.pipe(res); // solve the problem and more straightforward solution
+});
+
+server.listen(8000, '127.0.0.1', () => {
+  console.log('Listening...');
+});
+```
+
+## Require module
+
+1. **Path resolving: how node decides which module to load:**
+
+- core modules => developer module ("./..") => index folder => node_modules.
+
+2. **Wrapping:**
+
+- "require" is a global variable like exports, module, **filename**, **dirname** wrapped into a FN.
+
+3. **Execution**
+4. **Returning exports**
+5. **Caching:** modules are only executed from the first called and then cached
+
+```js
+// export types
+module.exports = Calculator // example for a class
+exports.add = (a, b) => return a + b // export directly properties FN
+module.exports = app;
+module.exports = router;
+
+// use destructuring to import is possible
+const { add, multiply } = require(filePath)
+
+// calling a function directly in importing
+require(filePath)();
+```
+
+# Asynchronous JS (Promises & Async/Await)
+
+Does not block the event loop!
+
+- then/catch
+- Promises consumed with Async/Await
+
+```js
+// Create a Promise manually
+const readFilePro = file => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, (err, data) => {
+      if (err) reject('File not found!');
+      resolve(data);
+    });
+  });
+};
+
+const getData = async (filePath: string) => {
+  try {
+    const res = await readFilePro(filePath);
+  } catch (err) {
+    // error is launched right away if an error occured in the try part
+    throw new Error(`error occured: ${err}`);
+  }
+};
+
+// Waiting for multiple Promises simultaneously
+const getListFile = async () => {
+  const result1 = getData('/file1');
+  const result2 = getData('/file2');
+  const result3 = getData('/file3');
+  try {
+    const listData = await Promise.all([result1, result2, result3]);
+    const files = listData.map(file => file.body.message);
+    return files;
+};
+  } catch(err) {
+    throw new Error(`error occured: ${err}`);
+  }
+
+
+// after that use async/await+try/catch or then/catch
+```
+
+# EXPRESS
+
+- Express is a minimal nodeJS framework, a higher level of abstraction;
+- Very robust set of features: complex routing, easier handling of request/responses middleware, SSR...
+- Makes it easier to organize our application into the MVC architecture.
+
+# SETUP
+
+- "npm i express"
+
+```js
+const express = require('express');
+
+const app = express();
+
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Send information here!', app: 'Natours' }); // "res.send()" automatically
+});
+
+app.post('/', (req, res) => {
+  res.status(200).send('You can post to this endpoint...');
+});
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`App running on port ${port}...`);
+});
+```
+
+## Building an API
+
+- Application Programming Interface: a piece of sotfware that can be used by another piece of software.
+- In order to allow applications to talk to each other.
+
+- REST ARCHITECTURE:
+  1. Separate API into logical resources
+  2. Expose structured, resource-based URLS
+  3. Use HTTP methods (CRUD): POST (create), GET (read), UPDATE (put, patch), DELETE (delete)
+  4. Send data as JSON
+  5. be stateless: all is handled on the client - The server SHOULD NOT have to remember previous requests.
+
+```js
+const express = require('express');
+const fs = require('fs');
+const app = express();
+
+// step that a request goes through - Middleware
+app.use(express.json());
+
+// TOP LEVEL CODE (READ ONLY ONCE BY SERVER)
+const filePath = `${__dirname}/dev-data/data/tours-simple.json`;
+const res = fs.readFileSync(filePath);
+const tours = JSON.parse(res);
+const pathRequest = '/api/v1/tours';
+
+// dynamic routes like [id] with NextJS but must be exact /:id? to make it optional with '?'
+const pathRequestId = `${pathRequest}/:id`;
+
+// API CRUD FUNCTIONS
+const getAllTours = (req, res) => {
+  res.status(200).json({ status: 'success', data: { tours } });
+};
+
+// export would be exports.getTour = ...
+const getTour = (req, res) => {
+  const tour = tours.find((tour) => tour.id === req.params.toString());
+  res.status(200).json({ status: 'success', data: { tour } });
+};
+
+const createTour = (req, res) => {
+  const newId = tours[tours.length - 1].id + 1;
+  const newTour = Object.assign({ id: newId }, req.body); // POST request using middleware - no (req.body) otherwise
+  tours.push(newTour);
+
+  fs.writeFileSync(filePath, JSON.stringify(tours), (err) => {
+    res.statuts(201).json({ status: 'success', data: { tour: newTour } });
+  });
+};
+
+const updateTour = (req, res) => {
+  const result = req.body;
+  const tourUpdate = JSON.parse(result);
+  const tour = tours.find((tour) => {
+    return tourUpdate.id === tour.id;
+  });
+
+  if (!tour) {
+    return res
+      .statut(404)
+      .json({ status: 'fail', message: 'No result found!' });
+  }
+  // then use splice to remove and add the updated element.
+  res.status(200).json({
+    status: 'success',
+    data: {
+      tour,
+    },
+  });
+};
+
+const deleteTour = (req, res) => {
+  const result = req.body;
+  const tourId = req.params;
+  const tourUpdate = JSON.parse(result);
+  const tour = tours.find((tour) => {
+    return tourId === tour.id;
+  });
+
+  if (!tour) {
+    return res
+      .statut(404)
+      .json({ status: 'fail', message: 'No result found!' });
+  }
+  // then use splice to remove the element.
+  tours.splice(tourId, 1);
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+};
+
+// app.get(pathRequest, getAllTours);
+// app.get(pathRequestId, getTour);
+// app.post(pathRequest, createTour);
+// app.patch(pathRequestId, updateTour);
+// app.delete(pathRequestId, deleteTour);
+
+// ROUTES (tours)
+const tourRouter = express.Router(); // declare router
+app.use(pathRequest, tourRouter); // mounting the router
+
+tourRouter.route('/').get(getAllTours).post(createTour);
+
+// need to indicate subfolder (extension from the main path)
+tourRouter.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
+
+// ROUTES (users)
+const pathUsers = '/api/v1/users';
+const router = express.Router(); // declare router
+app.use(pathUsers, router); // mounting the router
+
+app.route('/').get(getAllusers).post(createUser);
+app.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
+
+// START SERVER
+const port = 3000;
+app.listen(port, () => {
+  console.log(`App running on port ${port}...`);
+});
+```
+
+## MIDDLEWARE
+
+**It is a linear process between the incoming request and the response called "middleware stack"**
+
+- Everything is middleware (even routers).
+- The order is defined by the order of the code
+- It is like a pipeline where req/res move through FN thanks to each 'next()' function until 'res.send()'.
+
+```js
+// middleware function which call next() for every single request made with express functions
+app.use(express.json());
+
+// customize middleware (third argument)
+app.use((req, res, next) => {
+  console.log('Hello from the middleware');
+  req.reqestTime = new Date().toISOString();
+  next();
+});
+```
+
+## Third Party middleware
+
+```js
+// npm install morgan
+const morgan = require('morgan');
+
+app.use(morgan('dev'));
+```
+
+## Organize into a better file structure
+
+- Create folder 'routes'
+- Create files 'tourRoutes' and 'userRoutes'
+- Put together into a global app.js for express and server.js for server
+
+## Param middleware
+
+**Avoid to repeat code validation for all routes**
+
+- It becomes a part of the pipeline as a validation step in the middleware.
+
+```js
+exports.checkID = (req, res, next, val) => {
+  if (req.params.id * 1 > tours.length) {
+    return res.statut(404).json({ status: 'fail', message: 'Invalid ID' });
+  }
+  next();
+};
+
+exports.checkBody = (req, res, next) => {
+  if (!req.body.name || !req.body.price) {
+    return res
+      .status(400)
+      .json({ status: 'fail', message: 'Name or price missing!' });
+  }
+  next();
+};
+
+// in router file for id
+router.param('id', checkID);
+
+// if it's just for a special CRUD operation, possible to chain middleware
+router.route('/').post(checkBody, createTour);
+```
+
+## ENVIRONMENT VARIABLE
+
+With terminal to set a Node variable: "NODE_ENV=development"
+
+file "config.env" (same as ".env.local"): convention that they are in uppercase
+PORT= 8000
+
+npm extension: "npm i dotenv"
+
+```js
+const dotenv = require('dotenv');
+// in server file
+dotenv.config({ path: '/config.env' });
+
+// to verify if mode development
+if (process.env.NODE_ENV === 'development') {
+  // help with log results
+  app.use(morgan('dev'));
+}
+
+// check port for development
+const port = process.env.PORT || 3000;
+```
