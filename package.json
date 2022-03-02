@@ -2,14 +2,14 @@
   "name": "nodereferences",
   "version": "1.0.0",
   "description": "Learning from node.js, express and mongoDB",
-  "main": "app.ts",
+  "main": "./backend/server.ts",
   "scripts": {
     "start": "nodemon ./backend/server.ts",
     "dev": "webpack-dev-server",
     "build": "webpack --config webpack.config.prod.js"
   },
   "author": "John Lawlet",
-  "license": "ISC",
+  "license": "Satellites",
   "devDependencies": {
     "@tsconfig/node14": "^1.0.1",
     "@types/express": "^4.17.13",

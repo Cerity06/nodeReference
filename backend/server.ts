@@ -1,7 +1,8 @@
-const app = require('app');
+const app = require('./api');
 
-const port = 'localhost';
+const port = '8080';
+const hostname = '127.0.0.1';
 
-app.listen(port, () => {
-  console.log('listening on port ' + port);
+app.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}/`);
 });

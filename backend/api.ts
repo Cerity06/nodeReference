@@ -1,25 +1,25 @@
 import { Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
+import express from 'express';
 
-const fs = require('fs');
-const path = require('path');
-const express = require('express');
 const app = express();
 
-app.use(express.json());
-
-// TOP level code here
-const res: JSON = fs.readFileSync(
-  path.join(__dirname, '/data/data.json'),
-  'utf8'
+// TOP LEVEL CODE (read once)
+const res = fs.readFileSync(
+  path.join(process.cwd(), '/data/data.json'),
+  'utf-8'
 );
 const data: string = JSON.parse(res.toString());
-console.log(data);
 
+// Functions
 const getUserData = (req: Request, res: Response) => {
   res.status(200).json({ message: 'success', data: data });
 };
 
-const router = express.Router();
-app.use('/api/users', router);
+// ROUTING WITH APP
+app.use(express.json());
 
-app.router('/').get(getUserData);
+app.get('/', getUserData);
+
+module.exports = app;

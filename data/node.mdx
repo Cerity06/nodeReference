@@ -29,7 +29,10 @@ NODE.JS is a JAVASCRIPT RUNTIME built on google's open-source V8 javascript engi
 
 - modules: slugify, nodemon.
 
-- package.json: to install dev dependencies for development : "--save-dev"
+To install dev dependencies for development : "--save-dev" or "-D"
+To see packages installed globally already on your system: "npm list -g --depth 0"
+
+- PACKAGE.JSON
   - "npm init"
   - "npm install nodemon --save-dev" (auto restarting the server each time there is a change).
 - global installation: (sudo) npm i nodemon --global
@@ -37,21 +40,6 @@ NODE.JS is a JAVASCRIPT RUNTIME built on google's open-source V8 javascript engi
   - To use it easily, use script: scripts: { start: "nodemon file.js" } then 'npm start'.
 - npm version:
   - "npm outdated" to see current and latest version.
-
-**Example read and write with nodeJS**
-
-```js
-const fs = require('fs');
-const slugify = require('slugify'); // display slug instead of id (better lisibility)
-
-// read from file
-fs.readFileSync(filePath, 'utf-8'); // if not utf-8 indicated, it will send back the buffer.
-
-// write to file
-const textOut = `An example of text to try writing into a file on day ${Date.now()}.`;
-
-fs.writeFileSync(filePath, textOut); // create a file with a new text
-```
 
 ## Synchronous Vs Asynchronous (blocking vs non-blocking)
 
@@ -62,10 +50,36 @@ fs.writeFileSync(filePath, textOut); // create a file with a new text
 **Asynchronous:** non blocking I/O model
 
 - Callback functions in NodeJS are common (cascade function).
+- **CALLBACK: an event handler accepts a function, which will be called when the event is triggered.**
+- A callback is a simple function that's passed as a value to another function, and will only be executed when the event happens.
+
+- Handling errors in callback : Node.js adopted tha the first parameter in any callback function is the error object: **error-first callbacks**
+
+## PROMISE
+
+**ASYNC/AWAIT** is built on promises.
+**AWAIT:** Prepending the calling code will stop until the promise is resolved or rejected.
+**ASYNC:** Prepending the async keyword to any function means that the function will return a promise.
+
+## FILE SYSTEM (FS)
+
+There is an extension: https://www.npmjs.com/package/fs-extra
+**npm i fs-extra**
 
 ```js
-// asynchronous with callback()
-fs.readFile(filePath, 'utf-8', (err, data) => {
+// file stats give information on the file
+fs.stat('/Users/joe/test.txt', (err, stats) => {
+  if (err) {
+    console.error(err);
+    return;
+  } else {
+    const folder = stats.isDirectory; // or stats.isFile()
+    const size = stats.size; // document size
+  }
+});
+
+// READ
+fs.readFile(filePath, (err, data) => {
   if (err) {
     return throw new Error({ message: 'error occured!', data: error });
   } else {
@@ -73,9 +87,32 @@ fs.readFile(filePath, 'utf-8', (err, data) => {
   }
 });
 
-fs.writeFile(filePath, data, 'utf-8', (err) => {
-  console.log('Your file has been written');
+// WRITE AND APPEND
+fs.writeFile(filePath, content, (err) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+  console.log('Your content has been written');
+  return;
 });
+
+// https://nodejs.dev/learn/writing-files-with-nodejs
+// open file for reading and writing, positioning the stream at the end of the file. The file is created if it does not exist
+fs.writeFile('/Users/joe/test.txt', content, { flag: 'a+' }, (err) => {});
+
+// other way to append content to a file
+fs.appendFile('file.log', content, (err) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+});
+
+// WORKING WITH FOLDERS: https://nodejs.dev/learn/working-with-folders-in-nodejs
+fs.access(); // check if the folder exists and Node.js can access it with its permissions.
+fs.mkdir(PathName); // create folder if it does not exist
+fs.readdir(folderPath); // read full path
 ```
 
 ## Create simple web server + routing
@@ -182,8 +219,9 @@ Event loop does orchestration:
 
 ## Events and Event-Driven architecture
 
-**Event emitter:** => EMITS EVENTS => Event listener => CALLS => Attached callback function
+**EVENT EMITTER:** => EMITS EVENTS => Event listener => CALLS => Attached callback function
 
+- USED TO HANDLE EVENTS
 - If we want to use custome event (classes), we have to use EventEmitter.
 - Otherwise: use server which emit automatically and listen for requests.
 
@@ -201,24 +239,11 @@ myEmitter.on('newSale', () => {
   console.log('There was a new sale!');
 });
 
-myEmitter.on('newSale', stock => {
+myEmitter.on('newSale', (stock: number, buyer: string) => {
   console.log(`There are now ${stock} items in stock`); // argument stock sent back is 9
 });
 
-myEmitter.emit('newSale', 9);
-
-// other way to do it
-
-const server = http.createServer();
-
-server.on('request', (req, res) => {
-  console.log("Request received!")
-  res.end("Request received!")
-})
-
-server.listen(8000, '127.0.0.1' () => {
-  console.log("Waiting for requests")
-})
+myEmitter.emit('newSale', 9, "Bob Marchand";
 ```
 
 ## Streams
@@ -583,3 +608,13 @@ if (process.env.NODE_ENV === 'development') {
 // check port for development
 const port = process.env.PORT || 3000;
 ```
+
+# MONGO DB
+
+## DEFINITION
+
+- no SQL database
+- Format: BSON which is like JSON but typed.
+- Embedding/denormalizing:
+  - including related data into a single document
+  - Allows for quicker access and easier data models.
