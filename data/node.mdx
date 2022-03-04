@@ -61,13 +61,44 @@ To see packages installed globally already on your system: "npm list -g --depth 
 **AWAIT:** Prepending the calling code will stop until the promise is resolved or rejected.
 **ASYNC:** Prepending the async keyword to any function means that the function will return a promise.
 
-## FILE SYSTEM (FS)
+```js
+// Create a Promise manually
+const readFilePro = file => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, (err, data) => {
+      if (err) reject('File not found!');
+      resolve(data);
+    });
+  });
+};
+
+// Waiting for multiple Promises simultaneously
+const getListFile = async () => {
+  const result1 = getData('/file1');
+  const result2 = getData('/file2');
+  const result3 = getData('/file3');
+  try {
+    const listData = await Promise.all([result1, result2, result3]);
+    const files = listData.map(file => file.body.message);
+    return files;
+};
+  } catch(err) {
+    throw new Error(`error occured: ${err}`);
+  }
+
+```
+
+## NODE & TYPESCRIPT
+
+- Installation: "npm i -D typescript".
+
+## FILE SYSTEM (FS), PATH, OS, ENV
 
 There is an extension: https://www.npmjs.com/package/fs-extra
 **npm i fs-extra**
 
 ```js
-// file stats give information on the file
+// INFOS ON THE FILE
 fs.stat('/Users/joe/test.txt', (err, stats) => {
   if (err) {
     console.error(err);
@@ -98,7 +129,8 @@ fs.writeFile(filePath, content, (err) => {
 });
 
 // https://nodejs.dev/learn/writing-files-with-nodejs
-// open file for reading and writing, positioning the stream at the end of the file. The file is created if it does not exist
+// open file for reading and writing, positioning the stream at the end of the file.
+// The file is created if it does not exist
 fs.writeFile('/Users/joe/test.txt', content, { flag: 'a+' }, (err) => {});
 
 // other way to append content to a file
@@ -113,6 +145,34 @@ fs.appendFile('file.log', content, (err) => {
 fs.access(); // check if the folder exists and Node.js can access it with its permissions.
 fs.mkdir(PathName); // create folder if it does not exist
 fs.readdir(folderPath); // read full path
+
+// https://nodejs.dev/learn/the-nodejs-fs-module
+
+async function removeFolder(folder) {
+  try {
+    await fs.remove(folder);
+    //done
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// PATH - https://nodejs.dev/learn/the-nodejs-path-module
+path.extname('/test/something/file.txt'); // '.txt'
+
+// OS - https://nodejs.dev/learn/the-nodejs-os-module
+const { username, uid, gid, shell, homedir } = os.userinfo();
+const osInfosUser = () => {
+  return `your architecture is ${os.arch()}. You use ${os.platform()} and your operating system is ${os.type()}`;
+};
+
+// ENV - the difference between development and production
+if (process.env.NODE_ENV === 'development') {
+  //...
+}
+if (process.env.NODE_ENV === 'production') {
+  //...
+}
 ```
 
 ## Create simple web server + routing
@@ -157,27 +217,11 @@ server.listen(8000, '127.0.0.1', () => {
 })
 ```
 
-## Routing
-
-```js
-const url = require('url');
-
-const server = http.createServer((req, res)) => {
-  const { query, pathname } = url.parse(req.url, true)
-}
-```
-
-## export with nodeJS
-
-```js
-modules.exports = () => {
-  //  data to export
-};
-```
-
 # NODE JS EXPLAINED
 
 ## What happens when we access a webpage:
+
+**HTTP CODES:** https://nodejs.dev/learn/the-nodejs-http-module
 
 - CLIENT <=> HTTP request => send the protocol+IP+Port => TCP/IP connection <=> SERVER
 - HTTP request:
@@ -246,7 +290,16 @@ myEmitter.on('newSale', (stock: number, buyer: string) => {
 myEmitter.emit('newSale', 9, "Bob Marchand";
 ```
 
-## Streams
+## NODE.JS BUFFERS
+
+- A buffer is an area of memory
+- It represents a fixed-size chunk of memory (can't be resized) allocated outside of the V8 JavaScript engine.
+
+**Why do we need a buffer?:** Buffers were introduced to help developers deal with binary data.
+
+## STREAMS
+
+https://nodejs.dev/learn/nodejs-streams
 
 - Used to process (read and write data piece by piece (chuncks), without completing the whole read or write operation.
 - No need to keep all data in memory (perfect for handling large volumes of data).
@@ -261,6 +314,7 @@ myEmitter.emit('newSale', 9, "Bob Marchand";
 
 ```js
 // STREAM SOLUTIONS
+
 const fs = require('fs');
 const server = require('http').createServer();
 
@@ -295,13 +349,7 @@ server.listen(8000, '127.0.0.1', () => {
 });
 ```
 
-## Require module
-
-1. **Path resolving: how node decides which module to load:**
-
-- core modules => developer module ("./..") => index folder => node_modules.
-
-2. **Wrapping:**
+## EXPORT
 
 - "require" is a global variable like exports, module, **filename**, **dirname** wrapped into a FN.
 
@@ -323,64 +371,17 @@ const { add, multiply } = require(filePath)
 require(filePath)();
 ```
 
-# Asynchronous JS (Promises & Async/Await)
-
-Does not block the event loop!
-
-- then/catch
-- Promises consumed with Async/Await
-
-```js
-// Create a Promise manually
-const readFilePro = file => {
-  return new Promise((resolve, reject) => {
-    fs.readFile(file, (err, data) => {
-      if (err) reject('File not found!');
-      resolve(data);
-    });
-  });
-};
-
-const getData = async (filePath: string) => {
-  try {
-    const res = await readFilePro(filePath);
-  } catch (err) {
-    // error is launched right away if an error occured in the try part
-    throw new Error(`error occured: ${err}`);
-  }
-};
-
-// Waiting for multiple Promises simultaneously
-const getListFile = async () => {
-  const result1 = getData('/file1');
-  const result2 = getData('/file2');
-  const result3 = getData('/file3');
-  try {
-    const listData = await Promise.all([result1, result2, result3]);
-    const files = listData.map(file => file.body.message);
-    return files;
-};
-  } catch(err) {
-    throw new Error(`error occured: ${err}`);
-  }
-
-
-// after that use async/await+try/catch or then/catch
-```
-
 # EXPRESS
 
-- Express is a minimal nodeJS framework, a higher level of abstraction;
-- Very robust set of features: complex routing, easier handling of request/responses middleware, SSR...
-- Makes it easier to organize our application into the MVC architecture.
+- Express is a minimal nodeJS framework, a higher level of abstraction.
+- setup: "npm i express".
 
-# SETUP
+## ROUTING
 
-- "npm i express"
+**Definition:** routing refers to how an application’s endpoints (URIs) respond to client requests.
 
 ```js
 const express = require('express');
-
 const app = express();
 
 app.get('/', (req, res) => {
@@ -397,7 +398,7 @@ app.listen(port, () => {
 });
 ```
 
-## Building an API
+## BUILDING API
 
 - Application Programming Interface: a piece of sotfware that can be used by another piece of software.
 - In order to allow applications to talk to each other.
@@ -414,7 +415,7 @@ const express = require('express');
 const fs = require('fs');
 const app = express();
 
-// step that a request goes through - Middleware
+// MIDDLEWARE
 app.use(express.json());
 
 // TOP LEVEL CODE (READ ONLY ONCE BY SERVER)
@@ -490,32 +491,14 @@ const deleteTour = (req, res) => {
   });
 };
 
-// app.get(pathRequest, getAllTours);
-// app.get(pathRequestId, getTour);
-// app.post(pathRequest, createTour);
-// app.patch(pathRequestId, updateTour);
-// app.delete(pathRequestId, deleteTour);
-
-// ROUTES (tours)
-const tourRouter = express.Router(); // declare router
-app.use(pathRequest, tourRouter); // mounting the router
-
-tourRouter.route('/').get(getAllTours).post(createTour);
-
-// need to indicate subfolder (extension from the main path)
-tourRouter.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
-
-// ROUTES (users)
-const pathUsers = '/api/v1/users';
-const router = express.Router(); // declare router
-app.use(pathUsers, router); // mounting the router
-
-app.route('/').get(getAllusers).post(createUser);
-app.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
+// ROUTER
+app.route(pathRequest).get(getAllTours).post(createTour);
+app.route(pathRequestId).get(getTour).patch(updateTour).delete(deleteTour);
 
 // START SERVER
 const port = 3000;
-app.listen(port, () => {
+const hostname = '127.0.0.1';
+app.listen(port, hostname, () => {
   console.log(`App running on port ${port}...`);
 });
 ```
@@ -525,8 +508,12 @@ app.listen(port, () => {
 **It is a linear process between the incoming request and the response called "middleware stack"**
 
 - Everything is middleware (even routers).
-- The order is defined by the order of the code
 - It is like a pipeline where req/res move through FN thanks to each 'next()' function until 'res.send()'.
+
+**Important details:**
+
+- The order of middleware loading is important: middleware functions that are loaded first are also executed first.
+- FN are called then passes on the request to the next middleware function in the stack by calling the next() function.
 
 ```js
 // middleware function which call next() for every single request made with express functions
@@ -609,11 +596,35 @@ if (process.env.NODE_ENV === 'development') {
 const port = process.env.PORT || 3000;
 ```
 
+## ERROR HANDLING
+
+**IMPORTANT:** define error-handling middleware last, after other app.use() and routes calls!
+
+**SYNCHRONOUS:** if synchronous code throws an error, then Express will catch and process it.
+**ASYNC:** (Express 5) route handlers and middleware that return a Promise will call next(value) automatically when they reject or throw an error.
+Skip: it will skip any remaining of the middleware if there is an error occuring.
+
+**When an error is written, the following information is added to the response:**
+
+- The res.statusCode is set from err.status (or err.statusCode). If this value is outside the 4xx or 5xx range, it will be set to 500.
+- The res.statusMessage is set according to the status code.
+- The body will be the HTML of the status code message when in production environment, otherwise will be err.stack.
+- Any headers specified in an err.headers object.
+
+**Writing error handlers:** same way as other middleware, except error-handling functions have 4 arguments instead of three: (err, req, res, next).
+
+```jsx
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+```
+
 # MONGO DB
 
 ## DEFINITION
 
-- no SQL database
+- No SQL database
 - Format: BSON which is like JSON but typed.
 - Embedding/denormalizing:
   - including related data into a single document
