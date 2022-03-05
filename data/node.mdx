@@ -112,7 +112,10 @@ fs.stat('/Users/joe/test.txt', (err, stats) => {
 // READ
 fs.readFile(filePath, (err, data) => {
   if (err) {
-    return throw new Error({ message: 'error occured!', data: error });
+    return throw new Error({
+      message: 'error occured!',
+      data: error,
+    });
   } else {
     return { message: 'Reading sucessfull', data: data };
   }
@@ -131,7 +134,12 @@ fs.writeFile(filePath, content, (err) => {
 // https://nodejs.dev/learn/writing-files-with-nodejs
 // open file for reading and writing, positioning the stream at the end of the file.
 // The file is created if it does not exist
-fs.writeFile('/Users/joe/test.txt', content, { flag: 'a+' }, (err) => {});
+fs.writeFile(
+  '/Users/joe/test.txt',
+  content,
+  { flag: 'a+' },
+  (err) => {}
+);
 
 // other way to append content to a file
 fs.appendFile('file.log', content, (err) => {
@@ -175,7 +183,25 @@ if (process.env.NODE_ENV === 'production') {
 }
 ```
 
-## Create simple web server + routing
+### ENVIRONMENT VARIABLE
+
+- With terminal to set a Node variable: "NODE_ENV=development"
+- file "config.env" (same as ".env.local"), convention that they are in uppercase: PORT= 8000
+- npm extension: "npm i dotenv"
+
+```js
+const dotenv = require('dotenv');
+// in server file
+dotenv.config({ path: '/config.env' });
+
+// to verify if mode development
+if (process.env.NODE_ENV === 'development') {
+  // help with log results
+  app.use(morgan('dev'));
+}
+```
+
+## EXAMPLE CREATE WEB SERVER WITH NODE
 
 ```js
 const http = require('http');
@@ -385,7 +411,9 @@ const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Send information here!', app: 'Natours' }); // "res.send()" automatically
+  res
+    .status(200)
+    .json({ message: 'Send information here!', app: 'Natours' }); // "res.send()" automatically
 });
 
 app.post('/', (req, res) => {
@@ -396,6 +424,42 @@ const port = 3000;
 app.listen(port, () => {
   console.log(`App running on port ${port}...`);
 });
+```
+
+## ERROR HANDLING
+
+**IMPORTANT:** define error-handling middleware last, after other app.use() and routes calls!
+
+**SYNCHRONOUS:** if synchronous code throws an error, then Express will catch and process it.
+**ASYNC:** (Express 5) route handlers and middleware that return a Promise will call next(value) automatically when they reject or throw an error.
+Skip: it will skip any remaining of the middleware if there is an error occuring.
+
+**When an error is written, the following information is added to the response:**
+
+- The res.statusCode is set from err.status (or err.statusCode). If this value is outside the 4xx or 5xx range, it will be set to 500.
+- The res.statusMessage is set according to the status code.
+- The body will be the HTML of the status code message when in production environment, otherwise will be err.stack.
+- Any headers specified in an err.headers object.
+
+**Writing error handlers:** same way as other middleware, except error-handling functions have 4 arguments instead of three: (err, req, res, next).
+
+```jsx
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+```
+
+## DEBUGGING
+
+- Express uses the debug module internally to log information.
+- Everything about route matches, middleware functions that are in use, application mode, and the flow of the request-response cycle.
+- Logging is turned off by default and can be conditionally turned on by using the DEBUG environment variable.
+
+```js
+//set ENV variable
+DEBUG=express:\* node index.js**
+// to see only application, set to "express: application"
 ```
 
 ## BUILDING API
@@ -434,7 +498,9 @@ const getAllTours = (req, res) => {
 
 // export would be exports.getTour = ...
 const getTour = (req, res) => {
-  const tour = tours.find((tour) => tour.id === req.params.toString());
+  const tour = tours.find(
+    (tour) => tour.id === req.params.toString()
+  );
   res.status(200).json({ status: 'success', data: { tour } });
 };
 
@@ -444,7 +510,9 @@ const createTour = (req, res) => {
   tours.push(newTour);
 
   fs.writeFileSync(filePath, JSON.stringify(tours), (err) => {
-    res.statuts(201).json({ status: 'success', data: { tour: newTour } });
+    res
+      .statuts(201)
+      .json({ status: 'success', data: { tour: newTour } });
   });
 };
 
@@ -493,7 +561,11 @@ const deleteTour = (req, res) => {
 
 // ROUTER
 app.route(pathRequest).get(getAllTours).post(createTour);
-app.route(pathRequestId).get(getTour).patch(updateTour).delete(deleteTour);
+app
+  .route(pathRequestId)
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
 
 // START SERVER
 const port = 3000;
@@ -515,34 +587,18 @@ app.listen(port, hostname, () => {
 - The order of middleware loading is important: middleware functions that are loaded first are also executed first.
 - FN are called then passes on the request to the next middleware function in the stack by calling the next() function.
 
-```js
-// middleware function which call next() for every single request made with express functions
-app.use(express.json());
-
-// customize middleware (third argument)
-app.use((req, res, next) => {
-  console.log('Hello from the middleware');
-  req.reqestTime = new Date().toISOString();
-  next();
-});
-```
-
-## Third Party middleware
+## THIRD PARTY MIDDLEWARE
 
 ```js
 // npm install morgan
 const morgan = require('morgan');
-
 app.use(morgan('dev'));
+
+// check port for development
+const port = process.env.PORT || 3000;
 ```
 
-## Organize into a better file structure
-
-- Create folder 'routes'
-- Create files 'tourRoutes' and 'userRoutes'
-- Put together into a global app.js for express and server.js for server
-
-## Param middleware
+## CHECK PARAMS VALIDATION IN MIDDLEWARE
 
 **Avoid to repeat code validation for all routes**
 
@@ -551,7 +607,9 @@ app.use(morgan('dev'));
 ```js
 exports.checkID = (req, res, next, val) => {
   if (req.params.id * 1 > tours.length) {
-    return res.statut(404).json({ status: 'fail', message: 'Invalid ID' });
+    return res
+      .statut(404)
+      .json({ status: 'fail', message: 'Invalid ID' });
   }
   next();
 };
@@ -572,54 +630,6 @@ router.param('id', checkID);
 router.route('/').post(checkBody, createTour);
 ```
 
-## ENVIRONMENT VARIABLE
-
-With terminal to set a Node variable: "NODE_ENV=development"
-
-file "config.env" (same as ".env.local"): convention that they are in uppercase
-PORT= 8000
-
-npm extension: "npm i dotenv"
-
-```js
-const dotenv = require('dotenv');
-// in server file
-dotenv.config({ path: '/config.env' });
-
-// to verify if mode development
-if (process.env.NODE_ENV === 'development') {
-  // help with log results
-  app.use(morgan('dev'));
-}
-
-// check port for development
-const port = process.env.PORT || 3000;
-```
-
-## ERROR HANDLING
-
-**IMPORTANT:** define error-handling middleware last, after other app.use() and routes calls!
-
-**SYNCHRONOUS:** if synchronous code throws an error, then Express will catch and process it.
-**ASYNC:** (Express 5) route handlers and middleware that return a Promise will call next(value) automatically when they reject or throw an error.
-Skip: it will skip any remaining of the middleware if there is an error occuring.
-
-**When an error is written, the following information is added to the response:**
-
-- The res.statusCode is set from err.status (or err.statusCode). If this value is outside the 4xx or 5xx range, it will be set to 500.
-- The res.statusMessage is set according to the status code.
-- The body will be the HTML of the status code message when in production environment, otherwise will be err.stack.
-- Any headers specified in an err.headers object.
-
-**Writing error handlers:** same way as other middleware, except error-handling functions have 4 arguments instead of three: (err, req, res, next).
-
-```jsx
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
-```
-
 # MONGO DB
 
 ## DEFINITION
@@ -629,3 +639,10 @@ app.use((err, req, res, next) => {
 - Embedding/denormalizing:
   - including related data into a single document
   - Allows for quicker access and easier data models.
+
+## MONGOOSE DB
+
+- Mangoose is an Object Data Modeling (ODM) library.
+- Features: schemas to model data and relationships, easy data validation, simple query API, middleware, etc...
+- SCHEMA: where we model our data, by describing the structure of the data, default values, and validation.
+- MODEL: a wrapper for the schema, providing an interface ot the DB for CRUD operations.
