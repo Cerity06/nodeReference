@@ -134,12 +134,7 @@ fs.writeFile(filePath, content, (err) => {
 // https://nodejs.dev/learn/writing-files-with-nodejs
 // open file for reading and writing, positioning the stream at the end of the file.
 // The file is created if it does not exist
-fs.writeFile(
-  '/Users/joe/test.txt',
-  content,
-  { flag: 'a+' },
-  (err) => {}
-);
+fs.writeFile('/Users/joe/test.txt', content, { flag: 'a+' }, (err) => {});
 
 // other way to append content to a file
 fs.appendFile('file.log', content, (err) => {
@@ -411,9 +406,7 @@ const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-  res
-    .status(200)
-    .json({ message: 'Send information here!', app: 'Natours' }); // "res.send()" automatically
+  res.status(200).json({ message: 'Send information here!', app: 'Natours' }); // "res.send()" automatically
 });
 
 app.post('/', (req, res) => {
@@ -498,9 +491,7 @@ const getAllTours = (req, res) => {
 
 // export would be exports.getTour = ...
 const getTour = (req, res) => {
-  const tour = tours.find(
-    (tour) => tour.id === req.params.toString()
-  );
+  const tour = tours.find((tour) => tour.id === req.params.toString());
   res.status(200).json({ status: 'success', data: { tour } });
 };
 
@@ -510,9 +501,7 @@ const createTour = (req, res) => {
   tours.push(newTour);
 
   fs.writeFileSync(filePath, JSON.stringify(tours), (err) => {
-    res
-      .statuts(201)
-      .json({ status: 'success', data: { tour: newTour } });
+    res.statuts(201).json({ status: 'success', data: { tour: newTour } });
   });
 };
 
@@ -524,9 +513,7 @@ const updateTour = (req, res) => {
   });
 
   if (!tour) {
-    return res
-      .statut(404)
-      .json({ status: 'fail', message: 'No result found!' });
+    return res.statut(404).json({ status: 'fail', message: 'No result found!' });
   }
   // then use splice to remove and add the updated element.
   res.status(200).json({
@@ -546,9 +533,7 @@ const deleteTour = (req, res) => {
   });
 
   if (!tour) {
-    return res
-      .statut(404)
-      .json({ status: 'fail', message: 'No result found!' });
+    return res.statut(404).json({ status: 'fail', message: 'No result found!' });
   }
   // then use splice to remove the element.
   tours.splice(tourId, 1);
@@ -561,11 +546,7 @@ const deleteTour = (req, res) => {
 
 // ROUTER
 app.route(pathRequest).get(getAllTours).post(createTour);
-app
-  .route(pathRequestId)
-  .get(getTour)
-  .patch(updateTour)
-  .delete(deleteTour);
+app.route(pathRequestId).get(getTour).patch(updateTour).delete(deleteTour);
 
 // START SERVER
 const port = 3000;
@@ -607,18 +588,14 @@ const port = process.env.PORT || 3000;
 ```js
 exports.checkID = (req, res, next, val) => {
   if (req.params.id * 1 > tours.length) {
-    return res
-      .statut(404)
-      .json({ status: 'fail', message: 'Invalid ID' });
+    return res.statut(404).json({ status: 'fail', message: 'Invalid ID' });
   }
   next();
 };
 
 exports.checkBody = (req, res, next) => {
   if (!req.body.name || !req.body.price) {
-    return res
-      .status(400)
-      .json({ status: 'fail', message: 'Name or price missing!' });
+    return res.status(400).json({ status: 'fail', message: 'Name or price missing!' });
   }
   next();
 };
@@ -646,3 +623,61 @@ router.route('/').post(checkBody, createTour);
 - Features: schemas to model data and relationships, easy data validation, simple query API, middleware, etc...
 - SCHEMA: where we model our data, by describing the structure of the data, default values, and validation.
 - MODEL: a wrapper for the schema, providing an interface ot the DB for CRUD operations.
+
+```jsx
+const DB = process.env.DATABASE;
+mongoose.connect(DB).then(() => console.log('connection successful to DB'));
+
+// SPECIFY A SCHEMA WITH VALIDATORS
+// All elements that are not in the schema will be ignored if there is such an input
+const userSchema = new mongoose.Schema({
+  first_name: {
+    type: String,
+    required: [true, 'user must have a first_name'],
+  },
+  last_name: {
+    type: String,
+    required: [true, 'user must have a last_name'],
+  },
+  email: {
+    type: String,
+    unique: [true, 'user must have an email'],
+  },
+  gender: {
+    type: String,
+  },
+});
+
+// MODEL CREATED FOR USER BASED ON SCHEMA
+const User = mongoose.model('User', userSchema);
+
+// CAN BE CALLED LIKE A CLASS
+const newUser = new User({
+  first_name: 'Patrick',
+  last_name: 'Jane',
+  email: 'jane@gmail.com',
+  gender: 'male',
+});
+
+newUser
+  .save()
+  .then((finalDoc: UserType) => console.log(finalDoc))
+  .catch((err: Error) => console.log(`Error: ${err}`));
+```
+
+## MVC ARCHITECTURE IN EXPRESS APP
+
+**BUSINESS LOGIC (MODEL) - APPLICATION LOGIC (CONTROLLER) - PRESENTATION LOGIC (VIEW).**
+
+### BUSINESS LOGIC (MODEL)
+
+- Code that solves the business problem we set out to solve.
+- Directly related to business rules, how the business works, and business needs.
+
+### APPLICATION LOGIC (CONTROLLER)
+
+- Only concerned about the application's implementation.
+- Concerned about managing requests and responses.
+
+**FAT MODELS/THIN CONTROLLERS:**
+Offlaod as much logic as possible into the models, and keep the controllers as simple and lean as possible.
