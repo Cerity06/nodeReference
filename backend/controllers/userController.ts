@@ -76,3 +76,80 @@ export const checkServer = (
   res.status(500).send('Something broke!');
   next();
 };
+
+export const aliasTopUsers = (req: Request, res: Response, next: NextFunction) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage, price';
+  req.query.fields = 'name, price, ratingsAverage, summary, difficulty';
+  next();
+};
+
+// Aggregation pipeline to search data
+export const getUserStats = async (req: Request, res: Response) => {
+  try {
+    const stats = await User.aggregate([
+      {
+        $match: { ratingAverage: { $gte: 4.5 } },
+      },
+      {
+        $group: {
+          _id: '$difficulty',
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$raingAverage' },
+          avgPrice: { $avg: '$Price' },
+          minPrice: { $min: '$Price' },
+          maxPrice: { $max: '$Price' },
+        },
+      },
+      {
+        $sort: { avgPrice: 1 },
+      },
+      {
+        $match: { _id: { $ne: '$easy' } },
+      },
+    ]);
+  } catch (err) {
+    res.status(404).json({ status: 'fail', data: err });
+  }
+};
+// route is '/monthlyplan:year'
+const getMonthlyPlan = async (req: Request, res: Response) => {
+  try {
+    const year = +req.params.year;
+    const plan = await User.aggregate([
+      {
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numUserStarts: { $sum: 1 },
+          users: { $push: '$name' },
+        },
+      },
+      {
+        $addFields: { month: '$_id' },
+      },
+      {
+        $project: {
+          _id: 0,
+        },
+      },
+      {
+        $sort: { numUserStarts: -1 }, // is for DESC order
+      },
+    ]);
+    res.status(200).json({ status: 'success', data: plan });
+  } catch (err) {
+    res.status(404).json({ status: 'fail', data: err });
+  }
+};

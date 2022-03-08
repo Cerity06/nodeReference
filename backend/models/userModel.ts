@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
+    select: false, // hide sensitive information from being called (like pwd)
   },
 });
 

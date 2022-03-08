@@ -665,6 +665,80 @@ newUser
   .catch((err: Error) => console.log(`Error: ${err}`));
 ```
 
+### ADVANCED QUERIES WITH MANGOOSE
+
+req.query: parse the query string to an object.
+
+```ts
+// More specific way of doing it
+const query = Tour.find().where('duration').equals(5).where('difficulty').equals('easy');
+
+// Easiest way of doing it
+const query = Tour.find({
+  duration: 5,
+  difficulty: 'easy',
+});
+
+// same as
+const query = Tour.find(req.query);
+
+// MUST WAIT FOR RESULT BEFORE AWAIT THE QUERY
+const tours = await query;
+```
+
+**Copy query and filtering it**
+
+```ts
+// BUILD THE QUERY
+const queryObj = { ...req.query };
+const excludeFields = ['page', 'sort', 'limit', 'fields'];
+
+// FILTERING
+excludeFields.forEach((el) => delete queryObj[el]);
+
+// ADVANCED FILTERING WITH REGEX
+let queryStr = JSON.stringify(queryObj);
+// need to add a '$' sign to the query request (greater, lesser) to be understand by mangoose API
+queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+// SORTING
+let querySorted;
+if (req.query.sort) {
+  sortby = req.query.sort.split(',').join(' ');
+  querySorted = query.sort(req.query.sort);
+  // criteria tours?sort=-price,rating
+} else {
+  querySorted = query.sort('-createdAt');
+}
+
+// LIMITING FIELDS
+// request look like: /fields=name,duration
+let queryFields;
+if (req.query.fields) {
+  const fields = req.query.fields.split(',').join(' ');
+  queryFields = query.select(fields);
+} else {
+  queryFields = query.select('-__v'); // minus means exclusion
+}
+
+// PAGINATION - ALLOWS TO SKIP PAGES OR LIMIT DATA PER PAGE
+// page=3&limit=10 with 10 results per page
+const page = req.query.page * 1 || 1;
+const limit = req.query.limit * 1 || 100;
+const skip = (page - 1) * limit; // formula to calculate pages
+
+queryPaginated = query.skip(skip).limit(limit);
+
+if (req.auery.page) {
+  const numTours = await Tour.countDocuments();
+  if (skip > numTours) throw new Error('This page does not exist!');
+}
+
+// EXECUTE THE QUERY
+const query = Tour.find(JSON.parse(queryStr));
+const tours = await query;
+```
+
 ## MVC ARCHITECTURE IN EXPRESS APP
 
 **BUSINESS LOGIC (MODEL) - APPLICATION LOGIC (CONTROLLER) - PRESENTATION LOGIC (VIEW).**
