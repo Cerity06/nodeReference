@@ -47,7 +47,7 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const userUpdated = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true,
+      runValidators: true, // for validation in Schema, need to be set to true
     });
     res.status(200).json({ status: 'success', data: userUpdated });
   } catch (err) {

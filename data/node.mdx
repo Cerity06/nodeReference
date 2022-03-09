@@ -739,19 +739,39 @@ const query = Tour.find(JSON.parse(queryStr));
 const tours = await query;
 ```
 
+### MANGOOSE MIDDLEWARE
+
+- 4 types: document middleware, model middleware, aggregate middleware, and query middleware
+
+Those middleware are pre-something because they are launch before all the classic elements.
+
+validate data: "npm i validator"
+
+```ts
+// VALIDATE IN SCHEMA: this only points to current doc on NEW document creation
+validate: function (value) {
+    return value < this.price;
+},
+
+// If needed, possible to use module validation
+validate: [validator.isAlpha, 'Name must only contain character']
+```
+
 ## MVC ARCHITECTURE IN EXPRESS APP
 
 **BUSINESS LOGIC (MODEL) - APPLICATION LOGIC (CONTROLLER) - PRESENTATION LOGIC (VIEW).**
 
-### BUSINESS LOGIC (MODEL)
+BUSINESS LOGIC (MODEL)
 
 - Code that solves the business problem we set out to solve.
 - Directly related to business rules, how the business works, and business needs.
 
-### APPLICATION LOGIC (CONTROLLER)
+APPLICATION LOGIC (CONTROLLER)
 
 - Only concerned about the application's implementation.
 - Concerned about managing requests and responses.
 
-**FAT MODELS/THIN CONTROLLERS:**
+IMPORTANT: **FAT MODELS/THIN CONTROLLERS:**
 Offlaod as much logic as possible into the models, and keep the controllers as simple and lean as possible.
+
+# ERROR HANDLING WITH EXPRESS

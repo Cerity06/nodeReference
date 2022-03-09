@@ -6,4 +6,5 @@ export type UserType = {
   gender: string;
   ip_address?: string;
   createdAt?: Date;
+  slug?: string;
 };
