@@ -16,4 +16,8 @@ export interface ResponseError extends Error {
   status?: string;
 }
 
-export type Catch = (req: Request, res: Response, next: NextFunction) => any;
+export type CatchFN = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => Promise<void | NextFunction>;

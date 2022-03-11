@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { UserType } from '../../types';
 import data from '../../helpers/back';
 import User from '../models/userModel';
+import { catchAsync } from '../../utils/appError';
 
 export const logger = (req: Request, res: Response, next: NextFunction) => {
   const date = new Date().toISOString();

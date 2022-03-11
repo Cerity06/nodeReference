@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { ResponseError, Catch } from '../types';
+import { ResponseError, CatchFN } from '../types';
 
 export class AppError extends Error {
   statusCode: number;
@@ -30,7 +30,7 @@ export const middlewareErrorHandler = (
 };
 
 // create an anonymous function to try/catch
-export const catchAsync = (fn: Catch) => {
+export const catchAsync = async (fn: CatchFN) => {
   return (req: Request, res: Response, next: NextFunction) => {
     fn(req, res, next).catch(next);
   };

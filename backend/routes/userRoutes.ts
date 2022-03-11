@@ -10,7 +10,6 @@ import {
 } from '../controllers/userController';
 import { NextFunction, Request, Response } from 'express';
 import express from 'express';
-import { ResponseError } from '../../types';
 import { AppError, middlewareErrorHandler } from '../../utils/appError';
 
 const app = express();
