@@ -1,3 +1,5 @@
+import { NextFunction, Request, Response } from 'express';
+
 export type UserType = {
   id: number;
   first_name: string;
@@ -8,3 +10,10 @@ export type UserType = {
   createdAt?: Date;
   slug?: string;
 };
+
+export interface ResponseError extends Error {
+  statusCode?: number;
+  status?: string;
+}
+
+export type Catch = (req: Request, res: Response, next: NextFunction) => any;

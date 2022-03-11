@@ -775,3 +775,51 @@ IMPORTANT: **FAT MODELS/THIN CONTROLLERS:**
 Offlaod as much logic as possible into the models, and keep the controllers as simple and lean as possible.
 
 # ERROR HANDLING WITH EXPRESS
+
+**Google:** 'npm i ndb --save-dev'
+
+**Script**: in package.json: "debug": "ndb server.js"
+
+How to use:
+
+- select line to stop the code and go step by step.
+- Any change will be reflected in the original file.
+
+## HANDLING UNHANDLED ROUTES
+
+```ts
+// To handle all other routes that are note managed by the other normal routes
+app.all('*', (req: Request, res: Response, next: NextFunction) => {
+  res
+    .status(404)
+    .json({ status: 'fail', message: `Can't find ${req.originalUrl} on this server` });
+});
+```
+
+## ERROR TYPES
+
+**OPERAIONAL ERRORS:** problems that we can predict will happen at some point.
+
+- Invalid path accessed or user input
+- Failed to connect to server or database
+- request timeout...
+
+**PROGRAMMING ERRORS:** bugs introduced by developers into the code
+(Promise, sync/async, properties, wrong types...)
+
+**How to maange operational errors?** Use one central middleware check
+
+```ts
+// Middleware to check if operationnal errors and maange them
+interface ResponseError extends Error {
+  statusCode?: number;
+  status?: string;
+}
+
+app.use((err: ResponseError, req: Request, res: Response, next: NextFunction) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+
+  res.status(err.statusCode).json({ status: err.status, message: err.message });
+});
+```
