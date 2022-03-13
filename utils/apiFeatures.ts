@@ -2,9 +2,9 @@ import mongoose from 'mongoose';
 
 class APIFeatures {
   private query: object[];
-  private queryString: string[];
+  private queryString: [object];
 
-  constructor(query: object[], queryString: string[]) {
+  constructor(query: object[], queryString: [object]) {
     this.query = query;
     this.queryString = queryString;
   }
@@ -12,7 +12,7 @@ class APIFeatures {
   filter() {
     const queryObj = { ...this.queryString };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach((el: any) => delete queryObj[el]);
+    excludedFields.forEach((el: string) => delete queryObj[`${el}`]);
 
     // 1B) Advanced filtering
     let queryStr = JSON.stringify(queryObj);

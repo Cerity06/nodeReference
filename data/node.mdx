@@ -729,7 +729,7 @@ const skip = (page - 1) * limit; // formula to calculate pages
 
 queryPaginated = query.skip(skip).limit(limit);
 
-if (req.auery.page) {
+if (req.query.page) {
   const numTours = await Tour.countDocuments();
   if (skip > numTours) throw new Error('This page does not exist!');
 }
@@ -772,7 +772,7 @@ APPLICATION LOGIC (CONTROLLER)
 - Concerned about managing requests and responses.
 
 IMPORTANT: **FAT MODELS/THIN CONTROLLERS:**
-Offlaod as much logic as possible into the models, and keep the controllers as simple and lean as possible.
+Offload as much logic as possible into the models, and keep the controllers as simple and lean as possible.
 
 # ERROR HANDLING WITH EXPRESS
 
@@ -789,6 +789,7 @@ How to use:
 
 ```ts
 // To handle all other routes that are note managed by the other normal routes
+// Possible to add at the end of the router document
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
   res
     .status(404)
@@ -807,7 +808,14 @@ app.all('*', (req: Request, res: Response, next: NextFunction) => {
 **PROGRAMMING ERRORS:** bugs introduced by developers into the code
 (Promise, sync/async, properties, wrong types...)
 
-**How to maange operational errors?** Use one central middleware check
+**How to manage operational errors?** Use one central middleware check
+
+Create a file in utils/appError.ts
+
+1. **CREATE OUR OWN ERROR CLASS**: allows to better catch errors.
+2. **MIDDLEWARE CATCH ERROR:** build a middleware function to catch global error handling with the error class.
+3. Create a try/catch function in order to avoid duplicating code.
+4. Distinguish development error and production error
 
 ```ts
 // Middleware to check if operationnal errors and maange them

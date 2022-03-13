@@ -4,7 +4,7 @@
   "description": "Learning from node.js, express and mongoDB",
   "main": "./backend/server.ts",
   "scripts": {
-    "start": "nodemon ./backend/server.ts",
+    "dev": "nodemon ./backend/server.ts",
     "build": "webpack --config webpack.config.prod.js"
   },
   "author": "John Lawlet",

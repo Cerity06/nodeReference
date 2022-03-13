@@ -21,3 +21,10 @@ export type CatchFN = (
   res: Response,
   next: NextFunction
 ) => Promise<void | NextFunction>;
+
+export type ErrorData = {
+  status: string;
+  message: string;
+  error?: Error;
+  stack?: string;
+};

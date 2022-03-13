@@ -1,9 +1,6 @@
 import mongoose from 'mongoose';
-import { database } from '../../helpers/process';
 import { UserType } from '../../types';
 import slugify from 'slugify';
-
-mongoose.connect(database).then(() => console.log('connection successful to DB'));
 
 // SPECIFY A SCHEMA WITH VALIDATORS
 const userSchema = new mongoose.Schema<UserType>(
