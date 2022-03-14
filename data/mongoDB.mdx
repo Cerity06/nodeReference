@@ -1,0 +1,316 @@
+---
+title: 'MongoDB and Mongoose'
+description: 'Back-end development with node JS and Express'
+date: '13 mars 2022'
+author: 'John Lawlet'
+image: ''
+---
+
+# MONGOOSE
+
+## GETTING STARTED
+
+"npm install mongoose --save"
+
+## SCHEMA
+
+**Definition:** Schema maps to a MongoDB collection and defines the shape of the documents within that collection.
+
+```ts
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
+
+const blogSchema = new Schema({
+  title: String, // String is shorthand for {type: String}
+  author: String,
+  body: String,
+  comments: [{ body: String, date: Date }],
+  date: { type: Date, default: Date.now },
+  hidden: Boolean,
+  meta: {
+    votes: Number,
+    favs: Number,
+  },
+});
+```
+
+## CREATING A MODEL
+
+To use our schema definition, we need to convert our blogSchema into a Model we can work with.
+
+```ts
+// mongoose.model(modelName, schema)
+const Blog = mongoose.model('Blog', blogSchema);
+```
+
+**ids:** by default, Mongoose adds an "\_id" property to your schemas.
+**instance methods:** instances of Models are documents. Documents have many of their own built-in instance methods.
+
+```ts
+// define a schema
+const animalSchema = new Schema({ name: String, type: String });
+
+// assign a function to the "methods" object of our animalSchema
+animalSchema.methods.findSimilarTypes = function (cb) {
+  return mongoose.model('Animal').find({ type: this.type }, cb);
+};
+```
+
+**query helpers** functions which are like instance methods but for mongoose queries.
+
+```ts
+animalSchema.query.byName = function (name) {
+  return this.where({ name: new RegExp(name, 'i') });
+};
+
+const Animal = mongoose.model('Animal', animalSchema);
+
+Animal.find()
+  .byName('fido')
+  .exec((err, animals) => {
+    console.log(animals);
+  });
+
+Animal.findOne()
+  .byName('fido')
+  .exec((err, animal) => {
+    console.log(animal);
+  });
+```
+
+**Virtuals**: document properties that you can get and set but that do not get persisted to MongoDB.
+
+- Not stored: impossible to query with them !!
+
+```ts
+personSchema
+  .virtual('fullName')
+  .get(function () {
+    return this.name.first + ' ' + this.name.last;
+  })
+  .set(function (v) {
+    this.name.first = v.substr(0, v.indexOf(' '));
+    this.name.last = v.substr(v.indexOf(' ') + 1);
+  });
+
+axl.fullName = 'William Rose'; // Now `axl.name.first` is "William"
+```
+
+## Options Schema
+
+```ts
+new Schema({..}, options);
+
+// INDEX - builds can also create significant load on your production database.
+const schema = new Schema({..}, { autoIndex: false });
+
+// DISCRIMINATORYKEY - Mongoose adds a path to your schema that stores which discriminator a document is an instance of
+// you can set discriminatorKey to overwrite default
+const baseSchema = new Schema({}, { discriminatorKey: 'type' });
+// Without `discriminatorKey`, Mongoose would store the discriminator
+// key in `__t` instead of `type`
+doc.type; // 'Person'
+
+// ID - Mongoose assigns each of your schemas an id virtual getter by default which returns the document's _id
+console.log(user.id) // id of user instance of User model
+
+// STRICT - (enabled by default)
+// values passed to our model constructor that were not specified in our schema do not get saved to the db.
+const thingSchema = new Schema({..}, { strict: false });
+
+// TIMESTAMPS - tells Mongoose to assign createdAt and updatedAt fields to your schema (Date)
+const thingSchema = new Schema({..}, { timestamps: { createdAt: 'created_at' } });)
+const Thing = mongoose.model('Thing', thingSchema);
+const thing = new Thing();
+await thing.save(); // `created_at` & `updatedAt` will be included
+
+// With updates, Mongoose will add `updatedAt` to `$set`
+await Thing.updateOne({}, { $set: { name: 'Test' } });
+
+// If you set upsert: true, Mongoose will add `created_at` to `$setOnInsert` as well
+await Thing.findOneAndUpdate({}, { $set: { name: 'Test2' } });
+```
+
+## SCHEMA TYPES
+
+**Types:** String, Number, Date, Buffer, Boolean, Mixed\*, ObjectId, Array, Decimal128, Map.
+
+- Mixed:
+  - Can change the value to anything else, you can change the value to anything else you like.
+  - But no auto detect and save those changes.
+  - need to call "doc.markModified(path)"
+
+```ts
+person.anything = { x: [3, 4, { y: 'changed' }] };
+person.markModified('anything');
+person.save(); // Mongoose will save changes to `anything`.
+```
+
+**All Schema Types:**
+**required:** boolean or function, if true adds a required validator for this property
+**default:** Any or function, sets a default value for the path. If the value is a function, the return value of the function is used as the default.
+**select:** boolean, specifies default projections for queries
+**validate:** function, adds a validator function for this property
+**get:** function, defines a custom getter for this property using Object.defineProperty().
+**set:** function, defines a custom setter for this property using Object.defineProperty().
+**alias:** string, mongoose >= 4.10.0 only. Defines a virtual with the given name that gets/sets this path.
+**immutable:** boolean, defines path as immutable. Mongoose prevents you from changing immutable paths unless the parent document has isNew: true.
+**transform:** function, Mongoose calls this function when you call Document#toJSON() function, including when you JSON.stringify() a document.
+
+**Indexes**
+**index:** boolean, whether to define an index on this property.
+**unique:** boolean, whether to define a unique index on this property.
+**sparse:** boolean, whether to define a sparse index on this property.
+
+**String**
+**lowercase:** boolean, whether to always call .toLowerCase() on the value
+**uppercase:** boolean, whether to always call .toUpperCase() on the value
+**trim:** boolean, whether to always call .trim() on the value
+**match:** RegExp, creates a validator that checks if the value matches the given regular expression
+**enum:** Array, creates a validator that checks if the value is in the given array.
+**minLength:** Number, creates a validator that checks if the value length is not less than the given number
+**maxLength:** Number, creates a validator that checks if the value length is not greater than the given number
+**populate:** Object, sets default populate options
+
+**Number**
+**min:** Number, creates a validator that checks if the value is greater than or equal to the given minimum.
+**max:** Number, creates a validator that checks if the value is less than or equal to the given maximum.
+**enum:** Array, creates a validator that checks if the value is strictly equal to one of the values in the given array.
+**populate:** Object, sets default populate options
+
+**Date**
+**min:** Date
+**max:** Date
+
+```ts
+// markModified() link logic of type Date to its methods
+const Assignment = mongoose.model('Assignment', { dueDate: Date });
+Assignment.findOne(function (err, doc) {
+  doc.dueDate.setMonth(3);
+  doc.save(callback); // THIS DOES NOT SAVE YOUR CHANGE
+
+  doc.markModified('dueDate');
+  doc.save(callback); // works
+});
+```
+
+**ObjectId**
+**populate:** Object, sets default populate options
+
+**Special Maps**
+
+- A MongooseMap is a subclass of JavaScript's Map class => nested document with arbitrary keys.
+
+```ts
+const userSchema = new Schema({
+  // `socialMediaHandles` is a map whose values are strings. A map's
+  // keys are always strings. You specify the type of values using `of`.
+  socialMediaHandles: {
+    type: Map,
+    of: String,
+  },
+});
+
+const User = mongoose.model('User', userSchema);
+// Map { 'github' => 'vkarpov15', 'twitter' => '@code_barbarian' }
+console.log(
+  new User({
+    socialMediaHandles: {
+      github: 'vkarpov15',
+      twitter: '@code_barbarian',
+    },
+  }).socialMediaHandles
+);
+
+// Must use .get() to get the value of a key and .set() to set the value of a key.
+user.socialMediaHandles.set('github', 'vkarpov15');
+```
+
+## CONNECTIONS
+
+- Connect to MongoDB with the mongoose.connect() method.
+- Default port: 27017 on localhost || 127.0.0.1
+
+**ERROR HANDLING**
+
+- **Error on initial connection:** it won't try to reconnect.
+- **Error after initial connection:** it will emit an 'error' event.
+
+```ts
+try {
+  await mongoose.connect('mongodb://localhost:27017/test');
+} catch (error) {
+  handleError(error);
+}
+
+mongoose.connection.on('error', (err) => {
+  logError(err);
+});
+
+mongoose.connection.on('disconnected', (err) => {
+  logError(err);
+});
+```
+
+**OPTIONS**
+
+- **user/pass:** The username and password for authentication.
+- **authSource:** The DB to use when authenticating with user and pass. In MongoDB, users are scoped to a database.
+- If you are getting an unexpected login failure, you may need to set this option.
+  - Mongoose-specific, equivalent to MongoDB driver's auth.username and auth.password options.
+- **autoIndex:** great for development.
+  - Not ideal for large production deployments, because index builds can cause performance degradation.
+- **Sockets**: maxPoolSize, minPoolSize, socketTimeoutMS,
+
+```ts
+const options = {
+  autoIndex: false, // Don't build indexes
+  maxPoolSize: 10, // Maintain up to 10 socket connections
+  serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  family: 4, // Use IPv4, skip trying IPv6
+};
+mongoose.connect(uri, options);
+```
+
+**CONNECTION EVENTS:**
+
+events: connecting, connected, open, disconnecting, disconnected, close, reconnected, error (on connection), all...
+
+- For long running applications: often prudent to enable keepAlive with a number of milliseconds
+
+```ts
+mongoose.connect(uri, { keepAlive: true, keepAliveInitialDelay: 300000 });
+```
+
+**MULTIPLE CONNECTIONS**
+
+```ts
+const conn = mongoose.createConnection(
+  'mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database][?options]]',
+  options
+);
+
+// complete example with several models to multiple connections
+const mongoose = require('mongoose');
+
+module.exports = function connectionFactory() {
+  const conn = mongoose.createConnection(process.env.MONGODB_URI);
+
+  conn.model('User', require('../schemas/user'));
+  conn.model('PageView', require('../schemas/pageView'));
+
+  return conn;
+};
+```
+
+**SSL CONNECTIONS**
+
+- By default: The SSL option defaults to false with mongodb:// but true with mongodb+srv://.
+- srv connection string to connect to MongoDB Atlas => SSL is enabled by default.
+
+```ts
+mongoose.connect('mongodb://localhost:27017/test', { ssl: true });
+
+// More about SSL: https://mongoosejs.com/docs/tutorials/ssl.html
+```

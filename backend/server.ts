@@ -16,12 +16,12 @@ const server = app.listen(+port, () => {
   console.log(`Server running on port: ${port}`);
 });
 
-process.on('unhandledRejection', (err: Error) => {
-  console.log('UNHANDLED REJECTION * SHUTTING DOWN...');
-  console.log(err.name, err.message);
-  server.close(() => {
-    process.exit(1);
-  });
-});
+//process.on('unhandledRejection', (err: Error) => {
+//  console.log('UNHANDLED REJECTION * SHUTTING DOWN...');
+//  console.log(err.name, err.message);
+//  server.close(() => {
+//    process.exit(1);
+//  });
+//});
 
 module.exports = app;

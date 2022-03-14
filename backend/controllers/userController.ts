@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import User from '../models/userModel';
 import { catchAsync, AppError } from '../../utils/appError';
+import data from '../../helpers/back';
 
 // Functions used in routes
 export const getAllUsers = catchAsync(
@@ -13,10 +14,11 @@ export const getAllUsers = catchAsync(
 
 export const getUser = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.params.id;
-
-  if (!userId) return next(new AppError('No user found with that ID', 404));
-
   const userData = await User.findById(userId); // shorthand for User.findOne({ _id: req.params.id})
+
+  console.log(userData);
+  if (!userData) return next(new AppError('No user found with that ID', 404));
+
   res.status(200).json({ status: 'success', data: userData });
 };
 
@@ -24,6 +26,15 @@ export const createUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const newUser = await User.create(req.body);
     res.status(201).json({ status: 'success', data: newUser });
+  }
+);
+
+export const importAllData = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    data.map((user) => {
+      User.create(user);
+    });
+    res.status(200).json({ status: 'success', message: 'Data successfully loaded!' });
   }
 );
 
@@ -86,7 +97,7 @@ export const getUserStats = async (req: Request, res: Response) => {
   }
 };
 // route is '/monthlyplan:year'
-const getMonthlyPlan = async (req: Request, res: Response) => {
+export const getMonthlyPlan = async (req: Request, res: Response) => {
   try {
     const year = +req.params.year;
     const plan = await User.aggregate([

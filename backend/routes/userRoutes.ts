@@ -5,6 +5,7 @@ import {
   updateUser,
   deleteUser,
   aliasTopUsers,
+  importAllData,
 } from '../controllers/userController';
 import { NextFunction, Request, Response } from 'express';
 import express from 'express';
@@ -20,6 +21,7 @@ app.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
 // Using middleware to select special users through the route
 // prefill the query string object
 app.route('/top-5-user').get(aliasTopUsers, getAllUsers);
+app.route('/import-data').post(importAllData);
 
 app.post('/api/v1/user', createUser);
 

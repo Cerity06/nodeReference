@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import { CatchFN } from '../types';
-import { MongooseError, CastError } from 'mongoose';
 
 interface HandleError extends AppError {
   path: string;
@@ -29,8 +28,8 @@ const sendErrorDev = (err: AppError, res: Response) => {
   res.status(err.statusCode).json({
     status: err.status,
     message: err.message,
-    error: err, // general information about the error
-    stack: err.stack, // show where the error occurred
+    //error: err, // general information about the error
+    //stack: err.stack, // show where the error occurred
   });
 };
 

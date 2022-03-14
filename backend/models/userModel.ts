@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import { UserType } from '../../types';
 import slugify from 'slugify';
 
+const { Schema } = mongoose;
+
 // SPECIFY A SCHEMA WITH VALIDATORS
 const userSchema = new mongoose.Schema<UserType>(
   {
@@ -11,7 +13,6 @@ const userSchema = new mongoose.Schema<UserType>(
       trim: true,
       maxlength: [40, 'A first name must be less than 40 characters'],
     },
-    slug: { type: String },
     last_name: {
       type: String,
       required: [true, 'user must have a last_name'],
@@ -25,11 +26,12 @@ const userSchema = new mongoose.Schema<UserType>(
     gender: {
       type: String,
       enum: {
-        values: ['male', 'female'],
-        message: 'Sexe is either male or female',
+        values: ['Male', 'Female', 'Bigender', 'Genderqueer', 'Genderfluid'],
+        message: 'Sexe is either male, female, bigender, genderqueer or genderfluid',
       },
       default: 'unknown',
     },
+    ip_address: { type: String },
     createdAt: {
       type: Date,
       default: Date.now(),
@@ -40,6 +42,9 @@ const userSchema = new mongoose.Schema<UserType>(
           return value < this.price;
       },*/
     },
+    slug: {
+      type: String,
+    },
   },
   {
     // each time it's outputed in JSON, virtuals will be part of the data
@@ -49,34 +54,34 @@ const userSchema = new mongoose.Schema<UserType>(
 );
 
 // virtual data - durationWeek cannot be manipulated, read only
-userSchema.virtual('durationWeek').get(function (this: { createdAt: Date }) {
-  return this.createdAt.getDay() / 7;
-});
+//userSchema.virtual('durationWeek').get(function (this: { createdAt: Date }) {
+//  return this.createdAt.getDay() / 7;
+//});
 
 // MIDDLEWARE
 // DOCUMENT MIDDLEWARE: runs only before saving with ".save()" and ".create()"
 userSchema.pre('save', function (this: UserType, next) {
-  this.slug = slugify(this.first_name, { lower: true });
+  this.slug = slugify(this.first_name + ' ' + this.last_name, { lower: true });
   next();
 });
 
-// Show the finished document
+// Show the finished document "post" operation
 userSchema.post('save', function (doc, next) {
   console.log(doc);
   next();
 });
 
 // QUERY MIDDLEWARE
-userSchema.pre('/^find/', function (next) {
-  this.find({ secretUser: { $ne: true } }); // this bind to the query
-  next();
-});
+//userSchema.pre('/^find/', function (next) {
+//  this.find({ secretUser: { $ne: true } }); // this bind to the query
+//  next();
+//});
 
 // AGGREGATION MIDDLEWARE
-userSchema.pre('aggregate', function (this: any, next) {
-  this.pipeline().unshift({ $match: { secretUser: { $ne: true } } });
-  next();
-});
+//userSchema.pre('aggregate', function (this: any, next) {
+//  this.pipeline().unshift({ $match: { secretUser: { $ne: true } } });
+//  next();
+//});
 
 // MODEL CREATED FOR USER BASED ON SCHEMA
 const User = mongoose.model('User', userSchema);
