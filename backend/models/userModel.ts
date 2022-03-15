@@ -5,7 +5,7 @@ import slugify from 'slugify';
 const { Schema } = mongoose;
 
 // SPECIFY A SCHEMA WITH VALIDATORS
-const userSchema = new mongoose.Schema<UserType>(
+const userSchema = new Schema<UserType>(
   {
     first_name: {
       type: String,
@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema<UserType>(
       type: String,
       enum: {
         values: ['Male', 'Female', 'Bigender', 'Genderqueer', 'Genderfluid'],
-        message: 'Sexe is either male, female, bigender, genderqueer or genderfluid',
+        message: '{VALUE} is not supported', // Mongoose replaces {VALUE} with the value being validated.
       },
       default: 'unknown',
     },

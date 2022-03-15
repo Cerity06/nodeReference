@@ -8,7 +8,7 @@ interface HandleError extends AppError {
   errmsg: string;
 }
 
-export class AppError extends global.Error {
+export class AppError extends Error {
   statusCode: number;
   status: string;
   isOperational: boolean;

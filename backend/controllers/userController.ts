@@ -16,7 +16,7 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
   const userId = req.params.id;
   const userData = await User.findById(userId); // shorthand for User.findOne({ _id: req.params.id})
 
-  console.log(userData);
+  console.log(req.params.id);
   if (!userData) return next(new AppError('No user found with that ID', 404));
 
   res.status(200).json({ status: 'success', data: userData });
@@ -41,6 +41,7 @@ export const importAllData = catchAsync(
 // PATCH Method - PUT method would replace the data instead of updating it
 export const updateUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body);
     const userUpdated = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true, // for validation in Schema, need to be set to true

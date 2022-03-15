@@ -306,11 +306,195 @@ module.exports = function connectionFactory() {
 
 **SSL CONNECTIONS**
 
-- By default: The SSL option defaults to false with mongodb:// but true with mongodb+srv://.
+- By default: The SSL option defaults to FALSE with mongodb:// but TRUE with mongodb+srv://.
 - srv connection string to connect to MongoDB Atlas => SSL is enabled by default.
 
 ```ts
 mongoose.connect('mongodb://localhost:27017/test', { ssl: true });
 
 // More about SSL: https://mongoosejs.com/docs/tutorials/ssl.html
+```
+
+## MODELS
+
+- Models are fancy constructors compiled from Schema definitions. An instance of a model is called a document.
+- Models are responsible for creating and reading documents from the underlying MongoDB database.
+
+```ts
+const schema = new mongoose.Schema({ name: 'string', size: 'string' });
+const Tank = mongoose.model('Tank', schema);
+```
+
+## DOCUMENTS
+
+- Mongoose documents represent a one-to-one mapping to documents as stored in MongoDB.
+- **Documents vs Models:** each document is an instance of its Model.
+- The Model class is a subclass of the Document class.
+
+**Updating using save()**
+
+- The save() method returns a promise. If save() succeeds, the promise resolves to the document that was saved.
+
+```ts
+// generally the right way to update a document with Mongoose.
+// With save(), you get full validation and middleware.
+doc.save().then((savedDoc) => {
+  savedDoc === doc; // true
+
+  // OR instead of save() method - More flexible but more complex
+  await MyModel.updateMany({}, { $set: { name: 'foo' } });
+});
+```
+
+## Subdocuments
+
+- Subdocuments are documents embedded in other documents.
+- In Mongoose, this means you can nest schemas in other schemas.
+- The major difference: they are not saved individually but whenever their top-level parent document is saved.
+
+```ts
+const Parent = mongoose.model('Parent', parentSchema);
+const parent = new Parent({ children: [{ name: 'Matt' }, { name: 'Sarah' }] });
+parent.children[0].name = 'Matthew';
+
+// `parent.children[0].save()` is a no-op, it triggers middleware but
+// does **not** actually save the subdocument. You need to save the parent
+// doc.
+parent.save(callback);
+```
+
+## QUERIES
+
+- **DELETE:** deleteMany() - deleteOne() - findByIdAndRemove() - findOneAndRemove() - findByIdAndDelete() - findOneAndDelete()
+- **GET:** find() - findOne() - findById() - findByIdAndUpdate()
+- **UPDATE:** findOneAndUpdate() - updateOne() - updateMany()
+- **REPLACE:** replaceOne() - findOneAndReplace()
+
+## LEAN
+
+- The lean option tells Mongoose to skip hydrating the result documents => faster and less memory intensive.
+- plain old JavaScript objects (POJOs) instead of Mongoose documents.
+
+**Usage:** if you do not modify the query results and do not use custom getters.
+
+```ts
+// As long as you don't need any of the Person model's virtuals or getters,
+// you can use `lean()`.
+app.get('/person/:id', function (req, res) {
+  Person.findOne({ _id: req.params.id })
+    .lean()
+    .then((person) => res.json({ person }))
+    .catch((error) => res.json({ error: error.message }));
+});
+// lean means no `save()`
+// Possible to use plugins (virtuals, getters, default but in POJO)
+```
+
+**!! GET routes are good candidates for lean() !!**
+
+## VALIDATION
+
+- Validation is middleware. Mongoose registers validation as a pre('save') hook on every schema by default.
+
+```ts
+// Validation is customizable
+const userSchema = new Schema({
+  phone: {
+    type: String,
+    validate: {
+      validator: function (v) {
+        return /\d{3}-\d{3}-\d{4}/.test(v);
+      },
+      message: (props) => `${props.value} is not a valid phone number!`,
+    },
+    required: [true, 'User phone number required'],
+  },
+});
+```
+
+### VALIDATION ERROR
+
+- Errors returned after failed validation contain an errors object whose values are ValidatorError objects.
+- Each ValidatorError has kind, path, value, and message properties. May have a reason property.
+
+## MIDDLEWARE
+
+- Middleware are functions which are passed control during execution of asynchronous functions.
+- 4 types: document middleware, model middleware, aggregate middleware, and query middleware.
+- Parameters: validate, save, remove, updateOne, deleteOne, init (note: init hooks are synchronous).
+- IMPORTANT: Define Middleware Before Compiling Models, otherwise it won't fire.
+
+**Mongoose 5:** instead of calling next() manually => use a function that returns a promise (async/await).
+
+```ts
+// PRE MIDDLEWARE
+schema.pre('save', async function () {
+  await doStuff();
+  await doMoreStuff();
+});
+
+// RETURN
+const schema = new Schema(..);
+schema.pre('save', function(next) {
+  if (foo()) {
+    console.log('calling next!');
+    // `return next();` will make sure the rest of this function doesn't run
+    /*return*/ next();
+  }
+  // Unless you comment out the `return` above, 'after next' will print
+  console.log('after next');
+});
+
+// POST MIDDLEWARE
+schema.post('validate', function(doc) {
+  console.log('%s has been validated (but not saved yet)', doc._id);
+});
+schema.post('save', function(doc) {
+  console.log('%s has been saved', doc._id);
+});
+
+// NEXT WITH ERROR
+schema.pre('save', function(next) {
+  const err = new Error('something went wrong');
+  // If you call `next()` with an argument, that argument is assumed to be
+  // an error.
+  next(err);
+});
+
+// NEW WAY OF HANDLING ERRORS => Error Handling Middleware
+
+// Handler **must** take 3 params: the error that occurred, the document
+// in question, and the `next()` function
+schema.post('save', function(error, doc, next) {
+  if (error.name === 'MongoServerError' && error.code === 11000) {
+    next(new Error('There was a duplicate key error'));
+  } else {
+    next();
+  }
+});
+
+// WITH QUERIES
+schema.post('update', function(error, res, next) {
+  if (error.name === 'MongoServerError' && error.code === 11000) {
+    next(new Error('There was a duplicate key error'));
+  } else {
+    next(); // The `update()` call will still error out.
+  }
+});
+
+```
+
+## POPULATE
+
+- Process of automatically replacing the specified paths in the document with document(s) from other collection(s).
+
+```ts
+// populate instance Story with author instance of Person
+Story.findOne({ title: 'Casino Royale' })
+  .populate('author')
+  .exec(function (err, story) {
+    if (err) return handleError(err);
+    console.log('The author is %s', story.author.name);
+    // prints "The author is Ian Fleming"
+  });
 ```
