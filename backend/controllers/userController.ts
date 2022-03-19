@@ -13,13 +13,20 @@ export const getAllUsers = catchAsync(
 );
 
 export const getUser = async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.params.id;
-  const userData = await User.findById(userId); // shorthand for User.findOne({ _id: req.params.id})
+  try {
+    const userData = await User.findOne({ first_name: req.params.id }); // shorthand for User.findOne({ _id: req.params.id})
 
-  console.log(req.params.id);
-  if (!userData) return next(new AppError('No user found with that ID', 404));
-
-  res.status(200).json({ status: 'success', data: userData });
+    if (!userData) {
+      return res
+        .status(404)
+        .json({ status: 'fail', message: 'No user found with that ID' });
+    }
+    return res.status(200).json({ status: 'success', data: userData });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: 'fail', message: 'Connection to database failed' });
+  }
 };
 
 export const createUser = catchAsync(

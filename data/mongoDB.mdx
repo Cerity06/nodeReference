@@ -50,7 +50,7 @@ const Blog = mongoose.model('Blog', blogSchema);
 // define a schema
 const animalSchema = new Schema({ name: String, type: String });
 
-// assign a function to the "methods" object of our animalSchema
+// assign a customize function to the "methods" object of our animalSchema
 animalSchema.methods.findSimilarTypes = function (cb) {
   return mongoose.model('Animal').find({ type: this.type }, cb);
 };
@@ -80,7 +80,7 @@ Animal.findOne()
 
 **Virtuals**: document properties that you can get and set but that do not get persisted to MongoDB.
 
-- Not stored: impossible to query with them !!
+- Not stored: impossible to query with them!!
 
 ```ts
 personSchema
@@ -133,12 +133,12 @@ await Thing.findOneAndUpdate({}, { $set: { name: 'Test2' } });
 
 ## SCHEMA TYPES
 
-**Types:** String, Number, Date, Buffer, Boolean, Mixed\*, ObjectId, Array, Decimal128, Map.
+**Types:** String, Number, Date, Buffer, Boolean, Mixed, ObjectId, Array, Decimal128, Map.
 
 - Mixed:
   - Can change the value to anything else, you can change the value to anything else you like.
   - But no auto detect and save those changes.
-  - need to call "doc.markModified(path)"
+  - need to call "doc.markModified(path)".
 
 ```ts
 person.anything = { x: [3, 4, { y: 'changed' }] };
@@ -147,10 +147,10 @@ person.save(); // Mongoose will save changes to `anything`.
 ```
 
 **All Schema Types:**
-**required:** boolean or function, if true adds a required validator for this property
+**required:** boolean or function, if true adds a required validator for this property.
 **default:** Any or function, sets a default value for the path. If the value is a function, the return value of the function is used as the default.
-**select:** boolean, specifies default projections for queries
-**validate:** function, adds a validator function for this property
+**select:** boolean, specifies default projections for queries.
+**validate:** function, adds a validator function for this property.
 **get:** function, defines a custom getter for this property using Object.defineProperty().
 **set:** function, defines a custom setter for this property using Object.defineProperty().
 **alias:** string, mongoose >= 4.10.0 only. Defines a virtual with the given name that gets/sets this path.
@@ -163,20 +163,20 @@ person.save(); // Mongoose will save changes to `anything`.
 **sparse:** boolean, whether to define a sparse index on this property.
 
 **String**
-**lowercase:** boolean, whether to always call .toLowerCase() on the value
-**uppercase:** boolean, whether to always call .toUpperCase() on the value
-**trim:** boolean, whether to always call .trim() on the value
-**match:** RegExp, creates a validator that checks if the value matches the given regular expression
+**lowercase:** boolean, whether to always call .toLowerCase() on the value.
+**uppercase:** boolean, whether to always call .toUpperCase() on the value.
+**trim:** boolean, whether to always call .trim() on the value.
+**match:** RegExp, creates a validator that checks if the value matches the given regular expression.
 **enum:** Array, creates a validator that checks if the value is in the given array.
-**minLength:** Number, creates a validator that checks if the value length is not less than the given number
-**maxLength:** Number, creates a validator that checks if the value length is not greater than the given number
-**populate:** Object, sets default populate options
+**minLength:** Number, creates a validator that checks if the value length is not less than the given number.
+**maxLength:** Number, creates a validator that checks if the value length is not greater than the given number.
+**populate:** Object, sets default populate options.
 
 **Number**
 **min:** Number, creates a validator that checks if the value is greater than or equal to the given minimum.
 **max:** Number, creates a validator that checks if the value is less than or equal to the given maximum.
 **enum:** Array, creates a validator that checks if the value is strictly equal to one of the values in the given array.
-**populate:** Object, sets default populate options
+**populate:** Object, sets default populate options.
 
 **Date**
 **min:** Date
