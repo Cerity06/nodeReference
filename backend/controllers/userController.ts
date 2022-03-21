@@ -13,28 +13,28 @@ export const getAllUsers = catchAsync(
 );
 
 export const getUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const userData = await User.findOne({ first_name: req.params.id }); // shorthand for User.findOne({ _id: req.params.id})
-
-    if (!userData) {
-      return res
-        .status(404)
-        .json({ status: 'fail', message: 'No user found with that ID' });
-    }
-    return res.status(200).json({ status: 'success', data: userData });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ status: 'fail', message: 'Connection to database failed' });
+  const userData = await User.findOne({ first_name: req.params.first_name }); // shorthand for User.findOne({ _id: req.params.id})
+  if (userData) {
+    res.status(200).json({ status: 'success', data: userData });
+    return;
+  } else {
+    next();
   }
 };
 
-export const createUser = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const newUser = await User.create(req.body);
-    res.status(201).json({ status: 'success', data: newUser });
+export const getSex = async (req: Request, res: Response, next: NextFunction) => {
+  if (req.query) {
+    const { filterType } = req.query;
+    const listUsers = await User.find({ gender: filterType });
+    res.status(200).json({ status: 'success', data: listUsers });
+    return;
+  } else {
+    res
+      .status(404)
+      .json({ status: 'fail', message: 'No user of this type found! Please retry!' });
+    return;
   }
-);
+};
 
 export const importAllData = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -45,28 +45,46 @@ export const importAllData = catchAsync(
   }
 );
 
+// POST METHOD
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
+  const user = {
+    id: 96,
+    first_name: 'Roberta',
+    last_name: 'Girard',
+    email: 'robertagirard@creativecommons.org',
+    gender: 'Female',
+    ip_address: '170.47.153.38',
+  };
+  try {
+    await User.create(user);
+    // 201 is classic for creating data => POST methods
+    res.status(201).json({ status: 'success', message: user });
+    return;
+  } catch (err) {
+    res.status(400).json({ status: 'fail', message: err });
+    return;
+  }
+};
+
 // PATCH Method - PUT method would replace the data instead of updating it
-export const updateUser = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.body);
-    const userUpdated = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true, // for validation in Schema, need to be set to true
-    });
-    res.status(200).json({ status: 'success', data: userUpdated });
-  }
-);
+export const updateUser = catchAsync(async (req: Request, res: Response) => {
+  console.log(req.body);
+  const userUpdated = await User.findByIdAndUpdate(req.params.first_name, req.body, {
+    new: true, // return the document after update was applied
+    runValidators: true, // for validation in Schema, need to be set to true
+  });
+  res.status(200).json({ status: 'success', data: userUpdated });
+});
 
-export const deleteUser = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = await User.findByIdAndRemove(req.params.id);
-
-    if (!userId) return next(new AppError('No user found with that ID', 404));
-
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const username = await User.findByIdAndRemove(req.params.first_name);
+    // 204 is also a standard for deletion operation
     res.status(204).json({ status: 'success', data: null }); // Common practice not to send back any data when deletion
-    // 204 is also a standard for delete operation
+  } catch (err) {
+    res.status(404).json({ status: 'fail', message: 'No user found with that name' });
   }
-);
+};
 
 export const aliasTopUsers = (req: Request, res: Response, next: NextFunction) => {
   req.query.limit = '5';

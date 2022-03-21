@@ -1,6 +1,7 @@
 import {
   getAllUsers,
   getUser,
+  getSex,
   createUser,
   updateUser,
   deleteUser,
@@ -13,17 +14,17 @@ import { AppError, globalErrorHandler } from '../../utils/appError';
 
 const app = express();
 
-app.get('/', getAllUsers);
+app.route('/').get(getAllUsers).post(createUser);
 
 // this is why it is "req.params.id" => call variable parameter related to the route
-app.route('/:id').get(getUser).patch(updateUser).delete(deleteUser);
+app.route('/:first_name').get(getUser).patch(updateUser).delete(deleteUser);
+
+app.route('/query').get(getSex);
 
 // Using middleware to select special users through the route
 // prefill the query string object
 app.route('/top-5-user').get(aliasTopUsers, getAllUsers);
 app.route('/import-data').post(importAllData);
-
-app.post('/api/v1/user', createUser);
 
 // Middleware to check if operationnal errors and manage them
 app.use(globalErrorHandler);

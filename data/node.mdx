@@ -169,6 +169,13 @@ const osInfosUser = () => {
   return `your architecture is ${os.arch()}. You use ${os.platform()} and your operating system is ${os.type()}`;
 };
 
+const currentOs = {
+  name = os.type(),
+  release = os.release(),
+  totalMem = os.totalmem(),
+  freeMem = os.freemem(),
+}
+
 // ENV - the difference between development and production
 if (process.env.NODE_ENV === 'development') {
   //...
@@ -300,6 +307,7 @@ class Sales extends EventEmitter {
 
 const myEmitter = new Sales();
 
+// name of the event is first argument, and the callback
 myEmitter.on('newSale', () => {
   console.log('There was a new sale!');
 });
@@ -405,8 +413,16 @@ require(filePath)();
 const express = require('express');
 const app = express();
 
+app.use(express.static(filePath));
+
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Send information here!', app: 'Natours' }); // "res.send()" automatically
+});
+
+// LOAD A PAGE WHEN CLIENT GOES TO PAGE INDEX
+// DYNAMIC ROUTE: '/:id'
+app.get('/index', (req, res) => {
+  res.sendFile(path.join(process.cwd(), './index.html')); // can be a file and will display this on the index page
 });
 
 app.post('/', (req, res) => {
@@ -416,6 +432,13 @@ app.post('/', (req, res) => {
 const port = 3000;
 app.listen(port, () => {
   console.log(`App running on port ${port}...`);
+});
+
+// QUERY
+// '/index/api/query?search=5'
+app.get('/index/api/query', (req, res) => {
+  const { search, limit } = req.query;
+  req.query();
 });
 ```
 
@@ -491,7 +514,7 @@ const getAllTours = (req, res) => {
 
 // export would be exports.getTour = ...
 const getTour = (req, res) => {
-  const tour = tours.find((tour) => tour.id === req.params.toString());
+  const tour = tours.find((tour) => tour.id === req.params.id);
   res.status(200).json({ status: 'success', data: { tour } });
 };
 
@@ -623,6 +646,8 @@ router.route('/').post(checkBody, createTour);
 - Features: schemas to model data and relationships, easy data validation, simple query API, middleware, etc...
 - SCHEMA: where we model our data, by describing the structure of the data, default values, and validation.
 - MODEL: a wrapper for the schema, providing an interface ot the DB for CRUD operations.
+
+##
 
 ```jsx
 const DB = process.env.DATABASE;
@@ -818,16 +843,5 @@ Create a file in utils/appError.ts
 4. Distinguish development error and production error
 
 ```ts
-// Middleware to check if operationnal errors and maange them
-interface ResponseError extends Error {
-  statusCode?: number;
-  status?: string;
-}
 
-app.use((err: ResponseError, req: Request, res: Response, next: NextFunction) => {
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
-
-  res.status(err.statusCode).json({ status: err.status, message: err.message });
-});
 ```
