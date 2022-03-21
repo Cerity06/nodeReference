@@ -1,7 +1,7 @@
 import {
   getAllUsers,
   getUser,
-  getSex,
+  getGender,
   createUser,
   updateUser,
   deleteUser,
@@ -19,7 +19,7 @@ app.route('/').get(getAllUsers).post(createUser);
 // this is why it is "req.params.id" => call variable parameter related to the route
 app.route('/:first_name').get(getUser).patch(updateUser).delete(deleteUser);
 
-app.route('/query').get(getSex);
+app.route('/query').get(getGender);
 
 // Using middleware to select special users through the route
 // prefill the query string object

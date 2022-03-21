@@ -22,10 +22,10 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-export const getSex = async (req: Request, res: Response, next: NextFunction) => {
+export const getGender = async (req: Request, res: Response, next: NextFunction) => {
   if (req.query) {
-    const { filterType } = req.query;
-    const listUsers = await User.find({ gender: filterType });
+    const { gender } = req.query;
+    const listUsers = await User.find({ gender: gender });
     res.status(200).json({ status: 'success', data: listUsers });
     return;
   } else {
