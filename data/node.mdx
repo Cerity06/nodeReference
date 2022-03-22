@@ -604,13 +604,14 @@ const port = process.env.PORT || 3000;
 
 ## CHECK PARAMS VALIDATION IN MIDDLEWARE
 
-**Avoid to repeat code validation for all routes**
+**AVOID TO REPEAT CODE VALIDATION**
 
 - It becomes a part of the pipeline as a validation step in the middleware.
+- next is needed to go to the next middleware.
 
 ```js
 exports.checkID = (req, res, next, val) => {
-  if (req.params.id * 1 > tours.length) {
+  if (+req.params.id > tours.length) {
     return res.statut(404).json({ status: 'fail', message: 'Invalid ID' });
   }
   next();

@@ -8,11 +8,19 @@ import {
   aliasTopUsers,
   importAllData,
 } from '../controllers/userController';
+import { logger } from '../controllers/middleware';
 import { NextFunction, Request, Response } from 'express';
 import express from 'express';
 import { AppError, globalErrorHandler } from '../../utils/appError';
 
 const app = express();
+
+// Middleware to check if operationnal errors and manage them
+// can also be a [] of middleware functions as parameter.
+app.use(globalErrorHandler);
+
+// applied for everything related to /api routes
+app.use('/api', logger);
 
 app.route('/').get(getAllUsers).post(createUser);
 
@@ -25,9 +33,6 @@ app.route('/query').get(getGender);
 // prefill the query string object
 app.route('/top-5-user').get(aliasTopUsers, getAllUsers);
 app.route('/import-data').post(importAllData);
-
-// Middleware to check if operationnal errors and manage them
-app.use(globalErrorHandler);
 
 // To handle all other routes that are not managed by the other normal routes
 app.all('*', (req: Request, res: Response, next: NextFunction) => {
