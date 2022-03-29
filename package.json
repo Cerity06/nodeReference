@@ -11,7 +11,10 @@
   "license": "Satellites",
   "devDependencies": {
     "@tsconfig/node14": "^1.0.1",
+    "@types/bcryptjs": "^2.4.2",
     "@types/express": "^4.17.13",
+    "@types/jsonwebtoken": "^8.5.8",
+    "@types/validator": "^13.7.1",
     "clean-webpack-plugin": "^4.0.0",
     "lite-server": "^2.6.1",
     "nodemon": "^2.0.15",
@@ -22,11 +25,14 @@
     "webpack-dev-server": "^4.7.4"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.2.4",
     "prettier": "^2.5.1",
     "slugify": "^1.6.5",
-    "ts-node": "^10.5.0"
+    "ts-node": "^10.5.0",
+    "validator": "^13.7.0"
   }
 }

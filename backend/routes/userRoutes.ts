@@ -8,6 +8,7 @@ import {
   aliasTopUsers,
   importAllData,
 } from '../controllers/userController';
+import { signup } from '../controllers/authController';
 import { logger } from '../controllers/middleware';
 import { NextFunction, Request, Response } from 'express';
 import express from 'express';
@@ -21,6 +22,8 @@ app.use(globalErrorHandler);
 
 // applied for everything related to /api routes
 app.use('/api', logger);
+
+app.route('/signup').post(signup);
 
 app.route('/').get(getAllUsers).post(createUser);
 

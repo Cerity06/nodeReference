@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { Document } from 'mongoose';
 
 export type UserType = {
   id: number;
@@ -28,3 +29,14 @@ export type ErrorData = {
   error?: Error;
   stack?: string;
 };
+
+export interface IUserDocument extends Document {
+  name: string;
+  email: string;
+  photo?: string;
+  password: string;
+  passwordConfirmed: string;
+}
+export interface MemberDocument extends IUserDocument {
+  checkPassword: (password: string) => Promise<boolean>;
+}

@@ -1,0 +1,34 @@
+---
+title: 'Authentication with Mongoose, Node and Express Server'
+description: 'Back-end development with node JS'
+date: '24 mars 2022'
+author: 'John Lawlet'
+image: '/images/squirrel-illustration-night.jpg'
+---
+
+# Authentication steps and how it works
+
+1. Modeling user using a schema
+2. Creating new users with a signup request
+3. Managing password
+
+Crypt with 'bcrypt' => npm i bcryptjs
+
+```ts
+memberSchema.pre('save', async function (next) {
+  // only runs if password was actually modified
+  if (!this.isModified('password')) {
+    return next();
+  }
+
+  this.password = await bcrypt.hash(this.password, 12);
+
+  // delete the password confirmed
+  this.passwordConfirmed = undefined;
+});
+```
+
+## Authentication
+
+npm i jsonwebtoken
+npm i --save-dev @types/jsonwebtoken
