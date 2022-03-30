@@ -1,3 +1,4 @@
+import { promisify } from 'util';
 import { NextFunction, Request, Response } from 'express';
 import Member from '../models/MemberModel';
 import { MemberDocument } from '../../types';
@@ -44,5 +45,25 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     res.status(200).json({ status: 'success', message: 'connected!' });
   } catch (err) {
     return next(err);
+  }
+};
+
+export const protect = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // get the token
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) {
+      res.status(401).json({ status: 'unauthorized' });
+    }
+
+    // Verification token
+    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+    next();
+  } catch (err) {
+    next(err);
   }
 };
