@@ -34,9 +34,26 @@ export interface IUserDocument extends Document {
   name: string;
   email: string;
   photo?: string;
+  role: string;
   password: string;
   passwordConfirmed: string;
+  passwordResettoken: string | undefined;
+  passwordResetExpires: Date | undefined;
+  passwordChangedAt: Date;
 }
 export interface MemberDocument extends IUserDocument {
   checkPassword: (password: string) => Promise<boolean>;
+  changedPasswordAfter: (JWTTimestamp: number) => boolean;
+  resetPassword: () => string;
 }
+
+export interface RequestUser extends Request {
+  user: MemberDocument;
+}
+
+export type OptionsType = {
+  email: string;
+  subject: string;
+  message: string;
+  html?: string;
+};

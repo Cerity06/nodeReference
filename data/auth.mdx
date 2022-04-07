@@ -32,3 +32,86 @@ memberSchema.pre('save', async function (next) {
 
 npm i jsonwebtoken
 npm i --save-dev @types/jsonwebtoken
+
+## Security check for authorization (path)
+
+npm i jsonwebtoken
+import jwt from 'jsonwebtoken';
+const { promisify } = require('util');
+
+signup/login = create token with jwt.
+
+verify token:
+
+1. token is ok with the server
+2. User is logged in or didn't change is password
+3. User still exist
+
+## Authorization: user role and permissions
+
+Checking role through a middleware function and then send a response if role is not allowed.
+
+## Password reset functionality
+
+1. Get user based on email
+2. generate random reset token
+3. send it to user email address
+
+## Reset password
+
+- GET USER BASED ON THE TOKEN
+- IF TOKEN HAS NOT EXPIRED, AND USER STILL ACTIVE, SET THE NEW PASSWORD
+- UPDATE CHANGEPASSWORDAT PROPERTY FOR THE USER
+- LOG THE USER IN, SEND JWT
+
+## Cookie
+
+Definition:
+
+- Small piece of text that a server can send to client (browser client store the cookie).
+- The browser automaticaly send it back to the server when needed.
+
+## npm for security purposes (limiter and helmet (pack of security middleware))
+
+```ts
+const rateLimit = requite('express-rate-limit');
+const helmet = requite('helmet');
+
+// Set security headers
+app.use(helmet());
+
+// Limit requests from the client
+const limiter = ratelimit({
+  max: 1000,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from client, please try again in an hour!',
+});
+
+app.use('/api', limiter);
+
+// if body greater than 10kb, it will not be allowed
+app.use(express.json({ limit: '10kb' }));
+```
+
+## Data sanitization
+
+- Clean malicious code: XSS and noSQL query injection attacks
+
+- npm i express-mongo-sanitize
+- npm i xss-clean
+
+```ts
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+
+app.use(mongoSanitize()); // avoid using mongo API in body by malicious users
+app.use(xss()); // convert any html code injected to plain text
+
+// remove duplicate fields and clear up search query except if in whitelist
+app.use(
+  hpp({
+    ['duration', 'difficulty', 'price']
+  })
+);
+```
